@@ -85,7 +85,7 @@ function messageFromError(error: unknown, fallback: string) {
 function redirectWithError(
   path: "/login" | "/signup" | "/verify-email/pending",
   error: unknown,
-) {
+): never {
   const message = messageFromError(
     error,
     "Something went wrong. Check your Supabase Auth logs for the reference shown in the server output.",
@@ -93,7 +93,7 @@ function redirectWithError(
   redirect(`${path}?error=${encodeURIComponent(message)}`);
 }
 
-function redirectSupabaseConfirmationEnabled() {
+function redirectSupabaseConfirmationEnabled(): never {
   redirectWithError(
     "/signup",
     "Supabase email confirmation is still enabled. Disable it in Supabase Auth email settings so TeraTrace can send verification through SMTP instead of noreply@mail.app.supabase.io.",

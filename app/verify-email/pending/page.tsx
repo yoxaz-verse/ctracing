@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function VerificationPendingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; sent?: string }>;
+  searchParams: Promise<{ error?: string; send?: string; sent?: string }>;
 }) {
   const params = await searchParams;
   const supabase = await createClient();
