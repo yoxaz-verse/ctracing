@@ -1,0 +1,250 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f5f7f3;
+  --foreground: #17201b;
+  --surface: #ffffff;
+  --surface-soft: #eef3ec;
+  --surface-muted: #e3eadf;
+  --surface-subtle: #f3f6f0;
+  --surface-positive: #eef6ed;
+  --surface-danger: #fff1ed;
+  --panel-dark: #17201b;
+  --border: #d8ded2;
+  --border-strong: #b7c2b1;
+  --border-muted: #dfe5dc;
+  --text: #17201b;
+  --text-heading: #142019;
+  --text-muted: #5b6a61;
+  --text-soft: #6a756d;
+  --text-label: #314239;
+  --brand: #214d35;
+  --brand-hover: #183b28;
+  --brand-soft: #557462;
+  --accent: #d7f96f;
+  --danger-bg: #fff1ed;
+  --danger-text: #8a2c16;
+  --card-shadow: 0 24px 80px rgba(26, 45, 33, 0.12);
+}
+
+:root[data-theme="dark"] {
+  --background: #101612;
+  --foreground: #eef6ed;
+  --surface: #18211b;
+  --surface-soft: #121a15;
+  --surface-muted: #202d24;
+  --surface-subtle: #1b261f;
+  --surface-positive: #1d3225;
+  --surface-danger: #361e19;
+  --panel-dark: #070b08;
+  --border: #2d3b31;
+  --border-strong: #5f725f;
+  --border-muted: #2b382f;
+  --text: #eef6ed;
+  --text-heading: #f7fff6;
+  --text-muted: #b6c6ba;
+  --text-soft: #9eada2;
+  --text-label: #d8e5dc;
+  --brand: #8bd09b;
+  --brand-hover: #a6e7b5;
+  --brand-soft: #a8cbb2;
+  --accent: #d7f96f;
+  --danger-bg: #361e19;
+  --danger-text: #ffb49f;
+  --card-shadow: 0 24px 80px rgba(0, 0, 0, 0.36);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+body,
+a,
+button,
+input,
+select,
+textarea {
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+::selection {
+  background: var(--brand);
+  color: var(--surface);
+}
+
+.theme-toggle {
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+
+.theme-toggle button[aria-pressed="true"] {
+  background: var(--brand);
+  color: var(--surface);
+}
+
+.theme-toggle button[aria-pressed="false"]:hover {
+  color: var(--brand);
+}
+
+.bg-\[\#f5f7f3\] {
+  background-color: var(--background);
+}
+
+.bg-\[\#eef3ec\] {
+  background-color: var(--surface-soft);
+}
+
+.bg-white,
+.bg-white\/70 {
+  background-color: var(--surface);
+}
+
+.bg-\[\#e3eadf\] {
+  background-color: var(--surface-muted);
+}
+
+.bg-\[\#f3f6f0\] {
+  background-color: var(--surface-subtle);
+}
+
+.bg-\[\#eef6ed\] {
+  background-color: var(--surface-positive);
+}
+
+.bg-\[\#fff1ed\] {
+  background-color: var(--danger-bg);
+}
+
+.bg-\[\#17201b\] {
+  background-color: var(--panel-dark);
+}
+
+.bg-\[\#214d35\] {
+  background-color: var(--brand);
+}
+
+.hover\:bg-\[\#183b28\]:hover {
+  background-color: var(--brand-hover);
+}
+
+.text-\[\#17201b\],
+.text-\[\#263a2e\],
+.text-\[\#314239\] {
+  color: var(--text);
+}
+
+.text-\[\#142019\] {
+  color: var(--text-heading);
+}
+
+.text-\[\#526158\],
+.text-\[\#5b6a61\],
+.text-\[\#6a756d\] {
+  color: var(--text-muted);
+}
+
+.text-\[\#45624f\],
+.text-\[\#557462\] {
+  color: var(--brand-soft);
+}
+
+.text-\[\#214d35\] {
+  color: var(--brand);
+}
+
+.text-\[\#8a2c16\] {
+  color: var(--danger-text);
+}
+
+.border-\[\#d8ded2\],
+.border-\[\#d5ddd0\],
+.border-\[\#c8d2c2\],
+.border-\[\#c9d3c4\],
+.border-\[\#cbd5c5\],
+.border-\[\#ccd8c6\],
+.border-\[\#dfe5dc\],
+.border-\[\#e0e7dc\],
+.border-\[\#e2e8df\],
+.ring-\[\#d8ded2\],
+.ring-\[\#dfe5dc\],
+.ring-\[\#ccd8c6\] {
+  border-color: var(--border);
+  --tw-ring-color: var(--border-muted);
+}
+
+.border-\[\#b7c2b1\] {
+  border-color: var(--border-strong);
+}
+
+.hover\:border-\[\#214d35\]:hover,
+.focus\:border-\[\#214d35\]:focus,
+.has-\[\:checked\]\:border-\[\#214d35\]:has(:checked) {
+  border-color: var(--brand);
+}
+
+.has-\[\:checked\]\:bg-\[\#eef6ed\]:has(:checked) {
+  background-color: var(--surface-positive);
+}
+
+.shadow-\[0_24px_80px_rgba\(26\,45\,33\,0\.12\)\] {
+  box-shadow: var(--card-shadow);
+}
+
+input,
+select,
+textarea {
+  background-color: var(--surface);
+  color: var(--text);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-soft);
+}
+
+.loading-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.68) 48%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 220% 100%;
+  animation: loading-shimmer 1.25s ease-in-out infinite;
+}
+
+@keyframes loading-shimmer {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-shimmer {
+    animation: none;
+  }
+}

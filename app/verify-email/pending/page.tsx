@@ -1,0 +1,89 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { resendVerificationEmail } from "@/app/auth/actions";
+import { PendingButton } from "@/app/_components/PendingButton";
+import { AutoSendVerificationEmail } from "./AutoSendVerificationEmail";
+import { createClient } from "@/lib/supabase/server";
+import type { Profile, UserRole } from "@/lib/types";
+
+export const dynamic = "force-dynamic";
+
+export default async function VerificationPendingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string; sent?: string }>;
+}) {
+  const params = await searchParams;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id,email,role,company_name,email_verified_at")
+    .eq("id", user.id)
+    .maybeSingle<Profile>();
+
+  const fallbackRole = user.user_metadata?.role as UserRole | undefined;
+  const role = profile?.role ?? (fallbackRole === "seller" ? "seller" : "buyer");
+
+  if (profile?.email_verified_at) {
+    redirect(role === "seller" ? "/dashboard/seller" : "/dashboard/buyer");
+  }
+
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-[#eef3ec] px-6 py-12">
+      <section className="w-full max-w-xl rounded-3xl bg-white p-8 shadow-sm ring-1 ring-[#d8ded2]">
+        <Link href="/" className="text-lg font-semibold text-[#214d35]">
+          TeraTrace
+        </Link>
+        <p className="mt-8 text-sm font-semibold uppercase tracking-[0.18em] text-[#557462]">
+          Verify your email
+        </p>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight">
+          Check your company inbox.
+        </h1>
+        <p className="mt-4 leading-7 text-[#5b6a61]">
+          TeraTrace sent a verification link to{" "}
+          <span className="font-semibold text-[#17201b]">
+            {user.email ?? profile?.email}
+          </span>
+          . You can open your dashboard after that link is verified.
+        </p>
+
+        <AutoSendVerificationEmail shouldSend={params.send === "1"} />
+
+        {params.sent ? (
+          <p className="mt-5 rounded-2xl bg-[#eef6ed] px-4 py-3 text-sm text-[#214d35]">
+            Verification email sent from TeraTrace.
+          </p>
+        ) : null}
+
+        {params.error ? (
+          <p className="mt-5 rounded-2xl bg-[#fff1ed] px-4 py-3 text-sm text-[#8a2c16]">
+            {params.error}
+          </p>
+        ) : null}
+
+        <form action={resendVerificationEmail} className="mt-6">
+          <PendingButton
+            idleLabel="Resend verification email"
+            pendingLabel="Sending email..."
+            className="w-full rounded-full bg-[#214d35] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#183b28]"
+          />
+        </form>
+
+        <p className="mt-5 text-sm leading-6 text-[#6a756d]">
+          If you still receive Supabase confirmation emails, disable Supabase
+          email confirmation in Auth Providers. This app now sends its own SMTP
+          verification email.
+        </p>
+      </section>
+    </main>
+  );
+}
