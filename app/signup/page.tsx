@@ -2,6 +2,7 @@ import Link from "next/link";
 import { signUp } from "@/app/auth/actions";
 import { PendingButton } from "@/app/_components/PendingButton";
 import { PasswordField } from "@/app/_components/PasswordField";
+import { ThemeToggle } from "@/app/_components/ThemeToggle";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,7 @@ export default async function SignupPage({
 
   return (
     <main className="min-h-screen bg-[#eef3ec] px-6 py-12">
+      <ThemeToggle className="fixed right-6 top-6 z-50" />
       <section className="mx-auto grid max-w-5xl overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-[#d8ded2] lg:grid-cols-[0.9fr_1.1fr]">
         <div className="bg-[#17201b] p-8 text-white md:p-10">
           <Link href="/" className="text-lg font-semibold">

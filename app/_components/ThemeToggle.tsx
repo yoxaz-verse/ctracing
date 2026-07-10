@@ -21,7 +21,7 @@ function getInitialTheme(): Theme {
     : "light";
 }
 
-export function ThemeToggle() {
+export function ThemeToggle({ className = "" }: { className?: string }) {
   const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
@@ -37,12 +37,12 @@ export function ThemeToggle() {
   return (
     <div
       aria-label="Color mode"
-      className="theme-toggle fixed right-4 top-4 z-50 inline-flex rounded-full border p-1 shadow-sm backdrop-blur"
+      className={`theme-toggle inline-flex rounded-full border p-1 shadow-sm backdrop-blur ${className}`}
       role="group"
     >
       <button
         aria-pressed={theme === "light"}
-        className="rounded-full px-3 py-2 text-xs font-semibold transition"
+        className="rounded-full px-3 py-2 text-xs font-semibold transition cursor-pointer"
         onClick={() => setTheme("light")}
         type="button"
       >
@@ -50,7 +50,7 @@ export function ThemeToggle() {
       </button>
       <button
         aria-pressed={theme === "dark"}
-        className="rounded-full px-3 py-2 text-xs font-semibold transition"
+        className="rounded-full px-3 py-2 text-xs font-semibold transition cursor-pointer"
         onClick={() => setTheme("dark")}
         type="button"
       >

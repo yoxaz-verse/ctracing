@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { ThemeToggle } from "@/app/_components/ThemeToggle";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -39,7 +38,6 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="antialiased">
-        <ThemeToggle />
         {children}
       </body>
     </html>

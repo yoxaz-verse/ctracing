@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { verifyEmailToken } from "@/lib/email-verification";
+import { ThemeToggle } from "@/app/_components/ThemeToggle";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,7 @@ export default async function VerifyEmailPage({
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#eef3ec] px-6 py-12">
+      <ThemeToggle className="fixed right-6 top-6 z-50" />
       <section className="w-full max-w-lg rounded-3xl bg-white p-8 shadow-sm ring-1 ring-[#d8ded2]">
         <Link href="/" className="text-lg font-semibold text-[#214d35]">
           TeraTrace

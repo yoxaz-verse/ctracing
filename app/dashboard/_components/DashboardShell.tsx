@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { logOut } from "@/app/auth/actions";
 import { PendingButton } from "@/app/_components/PendingButton";
+import { ThemeToggle } from "@/app/_components/ThemeToggle";
 import type { Profile } from "@/lib/types";
 
 export function DashboardShell({
@@ -25,6 +26,7 @@ export function DashboardShell({
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
+            <ThemeToggle />
             <Link
               href="/dashboard/buyer"
               className={`rounded-full px-4 py-2 text-sm font-semibold ${

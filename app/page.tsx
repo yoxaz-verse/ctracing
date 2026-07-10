@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ThemeToggle } from "@/app/_components/ThemeToggle";
 
 const marketStats = [
   { label: "Indicative credits listed", value: "184k tCO2e" },
@@ -39,6 +40,7 @@ export default function Home() {
             TeraTrace
           </Link>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <Link
               href="/login"
               className="rounded-full border border-[#b7c2b1] px-4 py-2 text-sm font-medium text-[#263a2e] transition hover:border-[#214d35]"
