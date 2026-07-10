@@ -1,4 +1,4 @@
-create type public.user_role as enum ('buyer', 'seller');
+create type public.user_role as enum ('buyer', 'seller', 'admin');
 
 create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
@@ -42,14 +42,32 @@ create table public.buyer_interests (
   updated_at timestamptz not null default now()
 );
 
+create unique index buyer_interests_one_per_buyer_project
+  on public.buyer_interests (buyer_id, project_id);
+
 alter table public.profiles enable row level security;
 alter table public.email_verification_tokens enable row level security;
 alter table public.carbon_projects enable row level security;
 alter table public.buyer_interests enable row level security;
 
+create or replace function public.current_user_role()
+returns public.user_role
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select role from public.profiles where id = auth.uid()
+$$;
+
+grant execute on function public.current_user_role() to authenticated;
+
 create policy "Profiles are readable by their owner"
   on public.profiles for select
-  using (auth.uid() = id);
+  using (
+    auth.uid() = id
+    or public.current_user_role()::text = 'admin'
+  );
 
 create policy "Users can insert their own profile"
   on public.profiles for insert
@@ -86,11 +104,7 @@ create policy "Sellers can insert their own projects"
   to authenticated
   with check (
     seller_id = auth.uid()
-    and exists (
-      select 1 from public.profiles
-      where profiles.id = auth.uid()
-      and profiles.role = 'seller'
-    )
+    and public.current_user_role() = 'seller'
   );
 
 create policy "Sellers can update their own projects"
@@ -109,6 +123,7 @@ create policy "Buyers can read their own interests"
   to authenticated
   using (
     buyer_id = auth.uid()
+    or public.current_user_role()::text = 'admin'
     or exists (
       select 1 from public.carbon_projects
       where carbon_projects.id = buyer_interests.project_id
@@ -121,11 +136,7 @@ create policy "Buyers can create their own interests"
   to authenticated
   with check (
     buyer_id = auth.uid()
-    and exists (
-      select 1 from public.profiles
-      where profiles.id = auth.uid()
-      and profiles.role = 'buyer'
-    )
+    and public.current_user_role() = 'buyer'
   );
 
 create policy "Buyers can update their own interests"
