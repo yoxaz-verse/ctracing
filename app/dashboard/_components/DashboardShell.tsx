@@ -13,6 +13,26 @@ export function DashboardShell({
   activeRole: "buyer" | "seller" | "admin";
   children: React.ReactNode;
 }) {
+  const workflowLinks =
+    activeRole === "buyer"
+      ? [
+          ["Overview", "/dashboard/buyer"],
+          ["Projects", "/dashboard/buyer/projects"],
+          ["Interests", "/dashboard/buyer/interests"],
+        ]
+      : activeRole === "seller"
+        ? [
+            ["Overview", "/dashboard/seller"],
+            ["Projects", "/dashboard/seller/projects"],
+            ["Inquiries", "/dashboard/seller/inquiries"],
+          ]
+        : [
+            ["Overview", "/dashboard/admin"],
+            ["Reviews", "/dashboard/admin/reviews"],
+            ["Users", "/dashboard/admin/users"],
+            ["Audit", "/dashboard/admin/audit"],
+          ];
+
   return (
     <main className="min-h-screen bg-[#f5f7f3] text-[#17201b]">
       <header className="border-b border-[#d8ded2] bg-white">
@@ -69,6 +89,19 @@ export function DashboardShell({
           </div>
         </div>
       </header>
+      <div className="border-b border-[#d8ded2] bg-[#f5f7f3]">
+        <nav className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-6 py-3">
+          {workflowLinks.map(([label, href]) => (
+            <Link
+              key={href}
+              href={href}
+              className="whitespace-nowrap rounded-full border border-[#c8d2c2] bg-white px-4 py-2 text-sm font-semibold text-[#314239]"
+            >
+              {label}
+            </Link>
+          ))}
+        </nav>
+      </div>
       <div className="mx-auto max-w-7xl px-6 py-8">{children}</div>
     </main>
   );

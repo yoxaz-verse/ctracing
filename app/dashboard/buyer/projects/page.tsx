@@ -1,0 +1,296 @@
+import { PendingButton } from "@/app/_components/PendingButton";
+import {
+  registerInterest,
+  saveProject,
+  unsaveProject,
+} from "@/app/dashboard/actions";
+import { EmptyState } from "@/app/dashboard/_components/EmptyState";
+import { DashboardShell } from "@/app/dashboard/_components/DashboardShell";
+import { StatusBadge } from "@/app/dashboard/_components/StatusBadge";
+import { getSessionProfile, redirectForRole } from "@/lib/auth";
+import type { BuyerInterest, CarbonProject, SavedProject } from "@/lib/types";
+
+export const dynamic = "force-dynamic";
+
+function formatCredits(value: number) {
+  return new Intl.NumberFormat("en-IN").format(value);
+}
+
+function formatPrice(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+function includes(value: string | null | undefined, query: string) {
+  return (value ?? "").toLowerCase().includes(query.toLowerCase());
+}
+
+export default async function BuyerProjectsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    error?: string;
+    q?: string;
+    methodology?: string;
+    status?: string;
+  }>;
+}) {
+  const params = await searchParams;
+  const { supabase, profile } = await getSessionProfile();
+
+  if (profile.role !== "buyer") {
+    redirectForRole(profile.role);
+  }
+
+  const [{ data: projectsData }, { data: savedData }, { data: interestsData }] =
+    await Promise.all([
+      supabase
+        .from("carbon_projects")
+        .select(
+          "id,seller_id,project_name,location,methodology,available_credits,price_per_credit,verification_status,lifecycle_status,project_description,estimated_annual_credits,vintage_year,registry_name,documentation_score,created_at,updated_at",
+        )
+        .eq("lifecycle_status", "listed")
+        .order("created_at", { ascending: false })
+        .returns<CarbonProject[]>(),
+      supabase
+        .from("saved_projects")
+        .select("id,buyer_id,project_id,created_at")
+        .eq("buyer_id", profile.id)
+        .returns<SavedProject[]>(),
+      supabase
+        .from("buyer_interests")
+        .select("id,buyer_id,project_id,requested_credits,status,buyer_note,seller_response_note,updated_by,created_at,updated_at")
+        .eq("buyer_id", profile.id)
+        .returns<BuyerInterest[]>(),
+    ]);
+
+  const savedIds = new Set((savedData ?? []).map((saved) => saved.project_id));
+  const interests = new Map(
+    (interestsData ?? []).map((interest) => [interest.project_id, interest]),
+  );
+  const q = params.q?.trim() ?? "";
+  const methodology = params.methodology?.trim() ?? "";
+  const status = params.status?.trim() ?? "";
+  const projects = (projectsData ?? []).filter((project) => {
+    const matchesQuery =
+      !q ||
+      includes(project.project_name, q) ||
+      includes(project.location, q) ||
+      includes(project.methodology, q) ||
+      includes(project.registry_name, q);
+    const matchesMethodology = !methodology || project.methodology === methodology;
+    const matchesStatus =
+      !status || project.verification_status === status || project.lifecycle_status === status;
+    return matchesQuery && matchesMethodology && matchesStatus;
+  });
+  const methodologies = Array.from(
+    new Set((projectsData ?? []).map((project) => project.methodology)),
+  ).sort();
+  const statuses = Array.from(
+    new Set((projectsData ?? []).map((project) => project.verification_status)),
+  ).sort();
+
+  return (
+    <DashboardShell profile={profile} activeRole="buyer">
+      <section className="grid gap-6 lg:grid-cols-[1fr_0.34fr]">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#557462]">
+            Buyer discovery
+          </p>
+          <h1 className="mt-3 text-4xl font-semibold tracking-tight">
+            Search, compare, save, and register interest.
+          </h1>
+          <p className="mt-4 max-w-3xl leading-7 text-[#5b6a61]">
+            Filter listed projects by methodology, status, registry, location,
+            and indicative commercial signals.
+          </p>
+          {params.error ? (
+            <p className="mt-5 rounded-2xl bg-[#fff1ed] px-4 py-3 text-sm text-[#8a2c16]">
+              {params.error}
+            </p>
+          ) : null}
+        </div>
+        <div className="rounded-3xl bg-[#17201b] p-6 text-white">
+          <p className="text-sm text-white/60">Watchlist</p>
+          <p className="mt-2 text-3xl font-semibold">{savedIds.size}</p>
+          <p className="mt-4 text-sm leading-6 text-white/65">
+            Saved projects stay attached to your buyer profile.
+          </p>
+        </div>
+      </section>
+
+      <form className="mt-8 grid gap-3 rounded-3xl bg-white p-5 shadow-sm ring-1 ring-[#dfe5dc] md:grid-cols-[1fr_0.7fr_0.7fr_auto]">
+        <input
+          name="q"
+          defaultValue={q}
+          placeholder="Search project, region, registry"
+          className="rounded-2xl border border-[#cbd5c5] bg-white px-4 py-3 outline-none transition focus:border-[#214d35]"
+        />
+        <select
+          name="methodology"
+          defaultValue={methodology}
+          className="rounded-2xl border border-[#cbd5c5] bg-white px-4 py-3 outline-none transition focus:border-[#214d35]"
+        >
+          <option value="">All methodologies</option>
+          {methodologies.map((item) => (
+            <option key={item} value={item}>
+              {item}
+            </option>
+          ))}
+        </select>
+        <select
+          name="status"
+          defaultValue={status}
+          className="rounded-2xl border border-[#cbd5c5] bg-white px-4 py-3 outline-none transition focus:border-[#214d35]"
+        >
+          <option value="">All statuses</option>
+          {statuses.map((item) => (
+            <option key={item} value={item}>
+              {item}
+            </option>
+          ))}
+        </select>
+        <button className="rounded-full bg-[#214d35] px-5 py-3 text-sm font-semibold text-white">
+          Filter
+        </button>
+      </form>
+
+      <section className="mt-8 grid gap-5">
+        {projects.length ? (
+          projects.map((project) => {
+            const existingInterest = interests.get(project.id);
+            const isSaved = savedIds.has(project.id);
+
+            return (
+              <article
+                key={project.id}
+                className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-[#dfe5dc]"
+              >
+                <div className="grid gap-5 lg:grid-cols-[1fr_0.38fr]">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusBadge status={project.lifecycle_status} />
+                      <StatusBadge status={project.verification_status} />
+                      {project.registry_name ? (
+                        <span className="rounded-full bg-[#f3f6f0] px-3 py-1 text-xs font-semibold text-[#314239]">
+                          {project.registry_name}
+                        </span>
+                      ) : null}
+                    </div>
+                    <h2 className="mt-4 text-2xl font-semibold">
+                      {project.project_name}
+                    </h2>
+                    <p className="mt-2 text-sm text-[#6a756d]">
+                      {project.location} · {project.methodology}
+                    </p>
+                    <p className="mt-4 max-w-3xl text-sm leading-6 text-[#5b6a61]">
+                      {project.project_description ||
+                        "Seller has not added a public project description yet."}
+                    </p>
+                    <div className="mt-5 grid gap-3 sm:grid-cols-4">
+                      <p className="rounded-2xl bg-[#f3f6f0] p-4 text-sm text-[#5b6a61]">
+                        Available{" "}
+                        <span className="block font-semibold text-[#17201b]">
+                          {formatCredits(project.available_credits)}
+                        </span>
+                      </p>
+                      <p className="rounded-2xl bg-[#f3f6f0] p-4 text-sm text-[#5b6a61]">
+                        Annual est.{" "}
+                        <span className="block font-semibold text-[#17201b]">
+                          {formatCredits(project.estimated_annual_credits ?? 0)}
+                        </span>
+                      </p>
+                      <p className="rounded-2xl bg-[#f3f6f0] p-4 text-sm text-[#5b6a61]">
+                        Price{" "}
+                        <span className="block font-semibold text-[#17201b]">
+                          {formatPrice(project.price_per_credit)}
+                        </span>
+                      </p>
+                      <p className="rounded-2xl bg-[#f3f6f0] p-4 text-sm text-[#5b6a61]">
+                        Docs score{" "}
+                        <span className="block font-semibold text-[#17201b]">
+                          {project.documentation_score ?? 0}/100
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <form action={isSaved ? unsaveProject : saveProject}>
+                      <input type="hidden" name="projectId" value={project.id} />
+                      <input
+                        type="hidden"
+                        name="redirectTo"
+                        value="/dashboard/buyer/projects"
+                      />
+                      <PendingButton
+                        idleLabel={isSaved ? "Remove from saved" : "Save project"}
+                        pendingLabel={isSaved ? "Removing..." : "Saving..."}
+                        className="w-full rounded-full border border-[#c8d2c2] px-5 py-3 text-sm font-semibold text-[#314239]"
+                      />
+                    </form>
+                    <form
+                      action={registerInterest}
+                      className="rounded-2xl bg-[#f8faf6] p-4"
+                    >
+                      <input type="hidden" name="projectId" value={project.id} />
+                      <input
+                        type="hidden"
+                        name="redirectTo"
+                        value="/dashboard/buyer/projects"
+                      />
+                      <label className="block">
+                        <span className="text-sm font-medium text-[#314239]">
+                          Requested credits
+                        </span>
+                        <input
+                          required
+                          min="1"
+                          max={project.available_credits}
+                          name="requestedCredits"
+                          type="number"
+                          defaultValue={
+                            existingInterest?.requested_credits ??
+                            Math.min(project.available_credits, 1000)
+                          }
+                          className="mt-2 w-full rounded-2xl border border-[#cbd5c5] bg-white px-4 py-3 outline-none transition focus:border-[#214d35]"
+                        />
+                      </label>
+                      <label className="mt-3 block">
+                        <span className="text-sm font-medium text-[#314239]">
+                          Buyer note
+                        </span>
+                        <textarea
+                          name="buyerNote"
+                          defaultValue={existingInterest?.buyer_note ?? ""}
+                          rows={3}
+                          className="mt-2 w-full rounded-2xl border border-[#cbd5c5] bg-white px-4 py-3 outline-none transition focus:border-[#214d35]"
+                          placeholder="Share demand timing, preferred vintage, or review context."
+                        />
+                      </label>
+                      <PendingButton
+                        idleLabel={
+                          existingInterest ? "Update interest" : "Submit interest"
+                        }
+                        pendingLabel="Saving interest..."
+                        className="mt-4 w-full rounded-full bg-[#214d35] px-5 py-3 text-sm font-semibold text-white"
+                      />
+                    </form>
+                  </div>
+                </div>
+              </article>
+            );
+          })
+        ) : (
+          <EmptyState
+            title="No listed projects match this view."
+            detail="Try clearing filters, or check back once sellers submit and admins approve more projects."
+          />
+        )}
+      </section>
+    </DashboardShell>
+  );
+}
