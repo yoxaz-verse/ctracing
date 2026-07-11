@@ -29,7 +29,7 @@ test("server-renders the TeraTrace homepage", async () => {
 
   const html = await response.text();
   assert.match(html, /<title>TeraTrace \| Carbon Credit Marketplace<\/title>/i);
-  assert.match(html, /Traceable carbon supply/);
+  assert.match(html, /Trusted visibility into carbon credit supply/);
   assert.match(html, /Carbon credit marketplace foundation/);
   assert.match(html, /For buyers/);
   assert.match(html, /For sellers/);
