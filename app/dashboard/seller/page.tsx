@@ -2,10 +2,13 @@ import { PendingButton } from "@/app/_components/PendingButton";
 import {
   createProject,
   deleteProject,
+  submitProjectForReview,
   updateProject,
 } from "@/app/dashboard/actions";
 import { DashboardShell } from "@/app/dashboard/_components/DashboardShell";
+import { EmptyState } from "@/app/dashboard/_components/EmptyState";
 import { MetricCard } from "@/app/dashboard/_components/MetricCard";
+import { StatusBadge } from "@/app/dashboard/_components/StatusBadge";
 import { getSessionProfile, redirectForRole } from "@/lib/auth";
 import type { BuyerInterest, CarbonProject } from "@/lib/types";
 
@@ -14,13 +17,6 @@ export const dynamic = "force-dynamic";
 type SellerInterestRow = BuyerInterest & {
   carbon_projects?: Pick<CarbonProject, "project_name" | "location"> | null;
 };
-
-const verificationStatuses = [
-  "Documentation review",
-  "Registry pending",
-  "Verified supply",
-  "Buyer due diligence",
-];
 
 function formatCredits(value: number) {
   return new Intl.NumberFormat("en-IN").format(value);
@@ -32,28 +28,6 @@ function formatPrice(value: number) {
     currency: "USD",
     maximumFractionDigits: 0,
   }).format(value);
-}
-
-function StatusSelect({
-  name,
-  defaultValue,
-}: {
-  name: string;
-  defaultValue?: string;
-}) {
-  return (
-    <select
-      name={name}
-      defaultValue={defaultValue ?? verificationStatuses[0]}
-      className="mt-2 w-full rounded-2xl border border-[#cbd5c5] bg-white px-4 py-3 outline-none transition focus:border-[#214d35]"
-    >
-      {verificationStatuses.map((status) => (
-        <option key={status} value={status}>
-          {status}
-        </option>
-      ))}
-    </select>
-  );
 }
 
 export default async function SellerDashboardPage({
@@ -72,7 +46,7 @@ export default async function SellerDashboardPage({
     supabase
       .from("carbon_projects")
       .select(
-        "id,seller_id,project_name,location,methodology,available_credits,price_per_credit,verification_status,created_at,updated_at",
+        "id,seller_id,project_name,location,methodology,available_credits,price_per_credit,verification_status,lifecycle_status,created_at,updated_at",
       )
       .eq("seller_id", profile.id)
       .order("created_at", { ascending: false })
@@ -92,47 +66,51 @@ export default async function SellerDashboardPage({
     (sum, project) => sum + project.available_credits,
     0,
   );
+  const listedCredits = projects
+    .filter((project) => project.lifecycle_status === "listed")
+    .reduce((sum, project) => sum + project.available_credits, 0);
 
   return (
     <DashboardShell profile={profile} activeRole="seller">
-      <section className="grid gap-6 lg:grid-cols-[1fr_0.38fr]">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#557462]">
-            Seller workspace
-          </p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-tight">
-            Manage project inventory and buyer demand signals.
-          </h1>
-          <p className="mt-4 max-w-3xl leading-7 text-[#5b6a61]">
-            Present estimated available credits, communicate verification
-            readiness, and monitor purchase interest without implying final
-            issuance.
-          </p>
-          {params.error ? (
-            <p className="mt-5 rounded-2xl bg-[#fff1ed] px-4 py-3 text-sm text-[#8a2c16]">
-              {params.error}
+      <section>
+        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#557462]">
+          Seller workspace
+        </p>
+        <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h1 className="max-w-4xl text-3xl font-semibold tracking-tight md:text-4xl">
+              Manage project inventory and buyer demand signals.
+            </h1>
+            <p className="mt-4 max-w-3xl leading-7 text-[#5b6a61]">
+              Present estimated available credits, communicate verification
+              readiness, and monitor purchase interest without implying final
+              issuance.
             </p>
-          ) : null}
+          </div>
+          <a
+            href="#create-project"
+            className="inline-flex rounded-full bg-[#214d35] px-5 py-3 text-sm font-semibold text-white"
+          >
+            Create draft project
+          </a>
         </div>
-        <div className="rounded-3xl bg-[#17201b] p-6 text-white">
-          <p className="text-sm text-white/60">Role</p>
-          <p className="mt-2 text-2xl font-semibold">Carbon credit seller</p>
-          <p className="mt-4 text-sm leading-6 text-white/65">
-            Project rows are scoped to your authenticated seller profile.
+        {params.error ? (
+          <p className="mt-5 rounded-2xl bg-[#fff1ed] px-4 py-3 text-sm text-[#8a2c16]">
+            {params.error}
           </p>
-        </div>
+        ) : null}
       </section>
 
       <section className="mt-8 grid gap-4 md:grid-cols-3">
         <MetricCard
           label="Listed credits"
-          value={`${formatCredits(totalCredits)} tCO2e`}
-          detail="Estimated inventory across your live project listings."
+          value={`${formatCredits(listedCredits)} tCO2e`}
+          detail="Estimated inventory visible to buyers after admin approval."
         />
         <MetricCard
           label="Projects"
           value={String(projects.length)}
-          detail="Seller-owned listings stored in Supabase."
+          detail={`${formatCredits(totalCredits)} tCO2e across all draft, review, and listed projects.`}
         />
         <MetricCard
           label="Buyer inquiries"
@@ -143,8 +121,15 @@ export default async function SellerDashboardPage({
 
       <section className="mt-8 grid gap-6 lg:grid-cols-[0.78fr_0.42fr]">
         <div className="space-y-6">
-          <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-[#dfe5dc]">
-            <h2 className="text-2xl font-semibold">Create project listing</h2>
+          <div
+            id="create-project"
+            className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-[#dfe5dc]"
+          >
+            <h2 className="text-2xl font-semibold">Create draft project</h2>
+            <p className="mt-2 text-sm leading-6 text-[#5b6a61]">
+              Draft projects stay private until you submit them for admin review
+              and an admin marks them as listed.
+            </p>
             <form action={createProject} className="mt-5 grid gap-4 md:grid-cols-2">
               <label>
                 <span className="text-sm font-medium text-[#314239]">
@@ -181,12 +166,6 @@ export default async function SellerDashboardPage({
               </label>
               <label>
                 <span className="text-sm font-medium text-[#314239]">
-                  Verification status
-                </span>
-                <StatusSelect name="verificationStatus" />
-              </label>
-              <label>
-                <span className="text-sm font-medium text-[#314239]">
                   Estimated credits
                 </span>
                 <input
@@ -214,8 +193,8 @@ export default async function SellerDashboardPage({
               </label>
               <div className="md:col-span-2">
                 <PendingButton
-                  idleLabel="List project"
-                  pendingLabel="Listing project..."
+                  idleLabel="Create draft project"
+                  pendingLabel="Creating draft..."
                   className="rounded-full bg-[#214d35] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#183b28]"
                 />
               </div>
@@ -226,7 +205,7 @@ export default async function SellerDashboardPage({
             <div className="border-b border-[#e2e8df] pb-5">
               <h2 className="text-2xl font-semibold">Project listings</h2>
               <p className="mt-1 text-sm text-[#6a756d]">
-                Edit or remove your seller-owned listings.
+                Edit drafts, submit projects for admin review, and track buyer visibility.
               </p>
             </div>
 
@@ -237,6 +216,10 @@ export default async function SellerDashboardPage({
                     key={project.id}
                     className="rounded-2xl border border-[#e0e7dc] p-5"
                   >
+                    <div className="mb-4 flex flex-wrap gap-2">
+                      <StatusBadge status={project.lifecycle_status} />
+                      <StatusBadge status={project.verification_status} />
+                    </div>
                     <form
                       action={updateProject}
                       className="grid gap-4 md:grid-cols-2"
@@ -302,38 +285,48 @@ export default async function SellerDashboardPage({
                           className="mt-2 w-full rounded-2xl border border-[#cbd5c5] bg-white px-4 py-3 outline-none transition focus:border-[#214d35]"
                         />
                       </label>
-                      <label className="md:col-span-2">
-                        <span className="text-sm font-medium text-[#314239]">
-                          Verification status
-                        </span>
-                        <StatusSelect
-                          name="verificationStatus"
-                          defaultValue={project.verification_status}
-                        />
-                      </label>
                       <div className="flex flex-wrap gap-3 md:col-span-2">
                         <PendingButton
-                          idleLabel="Update listing"
-                          pendingLabel="Updating listing..."
+                          idleLabel="Update project"
+                          pendingLabel="Updating project..."
                           className="rounded-full bg-[#214d35] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#183b28]"
                         />
                       </div>
                     </form>
-                    <form action={deleteProject} className="mt-3">
-                      <input type="hidden" name="projectId" value={project.id} />
-                      <PendingButton
-                        idleLabel="Delete listing"
-                        pendingLabel="Deleting listing..."
-                        className="rounded-full border border-[#d8b8ad] px-5 py-3 text-sm font-semibold text-[#8a2c16] transition hover:bg-[#fff1ed]"
-                      />
-                    </form>
+                    <div className="mt-3 flex flex-wrap gap-3">
+                      {project.lifecycle_status === "listed" ? null : (
+                        <form action={submitProjectForReview}>
+                          <input type="hidden" name="projectId" value={project.id} />
+                          <input
+                            type="hidden"
+                            name="redirectTo"
+                            value="/dashboard/seller"
+                          />
+                          <PendingButton
+                            idleLabel="Submit for admin review"
+                            pendingLabel="Submitting..."
+                            className="rounded-full border border-[#c8d2c2] px-5 py-3 text-sm font-semibold text-[#314239] transition hover:bg-[#f3f6f0]"
+                          />
+                        </form>
+                      )}
+                      <form action={deleteProject}>
+                        <input type="hidden" name="projectId" value={project.id} />
+                        <PendingButton
+                          idleLabel="Delete project"
+                          pendingLabel="Deleting project..."
+                          className="rounded-full border border-[#d8b8ad] px-5 py-3 text-sm font-semibold text-[#8a2c16] transition hover:bg-[#fff1ed]"
+                        />
+                      </form>
+                    </div>
                   </article>
                 ))}
               </div>
             ) : (
-              <div className="mt-6 rounded-2xl border border-dashed border-[#cbd5c5] p-6 text-sm leading-6 text-[#5b6a61]">
-                No live projects yet. Create your first listing above so buyers
-                can review available supply.
+              <div className="mt-6">
+                <EmptyState
+                  title="No project listings yet"
+                  detail="Create your first draft above, then submit it for admin review before buyers can discover the supply."
+                />
               </div>
             )}
           </div>
@@ -364,18 +357,21 @@ export default async function SellerDashboardPage({
                 ))}
               </div>
             ) : (
-              <p className="mt-4 text-sm leading-6 text-[#5b6a61]">
-                Buyer purchase-interest records will appear here after buyers
-                submit interest in your listings.
-              </p>
+              <div className="mt-5">
+                <EmptyState
+                  title="No buyer inquiries yet"
+                  detail="Purchase-interest records will appear here after buyers submit interest in your listed projects."
+                />
+              </div>
             )}
           </div>
           <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-[#dfe5dc]">
             <h2 className="text-xl font-semibold">Listing guidance</h2>
             <ul className="mt-4 space-y-3 text-sm leading-6 text-[#5b6a61]">
               <li>Keep available credits tied to documented estimates.</li>
-              <li>Update verification status as project evidence changes.</li>
-              <li>Review buyer interest before any transaction workflow.</li>
+              <li>Submit drafts for admin review when the listing is ready.</li>
+              <li>Admin review controls documentation and listing status.</li>
+              <li>Review buyer interest after a project is approved as listed.</li>
             </ul>
           </div>
         </aside>

@@ -1,15 +1,14 @@
 import Link from "next/link";
-import { logIn } from "@/app/auth/actions";
 import { PendingButton } from "@/app/_components/PendingButton";
-import { PasswordField } from "@/app/_components/PasswordField";
 import { ThemeToggle } from "@/app/_components/ThemeToggle";
+import { requestPasswordReset } from "@/app/auth/actions";
 
 export const dynamic = "force-dynamic";
 
-export default async function LoginPage({
+export default async function ForgotPasswordPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; message?: string }>;
+  searchParams: Promise<{ error?: string; sent?: string }>;
 }) {
   const params = await searchParams;
 
@@ -21,13 +20,18 @@ export default async function LoginPage({
           TeraTrace
         </Link>
         <h1 className="mt-8 text-3xl font-semibold tracking-tight">
-          Log in to your workspace
+          Reset your password
         </h1>
         <p className="mt-3 text-sm leading-6 text-[#5b6a61]">
-          Access buyer, seller, or admin workspaces based on your saved company
-          role. Admins sign in here after their profile is promoted by an
-          operator.
+          Enter your account email. TeraTrace will send a password reset link
+          through the configured SMTP sender.
         </p>
+
+        {params.sent ? (
+          <p className="mt-5 rounded-2xl bg-[#eef6ed] px-4 py-3 text-sm text-[#214d35]">
+            If an account exists for that email, we sent a password reset link.
+          </p>
+        ) : null}
 
         {params.error ? (
           <p className="mt-5 rounded-2xl bg-[#fff1ed] px-4 py-3 text-sm text-[#8a2c16]">
@@ -35,13 +39,7 @@ export default async function LoginPage({
           </p>
         ) : null}
 
-        {params.message ? (
-          <p className="mt-5 rounded-2xl bg-[#eef6ed] px-4 py-3 text-sm text-[#214d35]">
-            {params.message}
-          </p>
-        ) : null}
-
-        <form action={logIn} className="mt-6 space-y-4">
+        <form action={requestPasswordReset} className="mt-6 space-y-4">
           <label className="block">
             <span className="text-sm font-medium text-[#314239]">Email</span>
             <input
@@ -52,26 +50,17 @@ export default async function LoginPage({
               placeholder="you@company.com"
             />
           </label>
-          <PasswordField />
-          <div className="-mt-1 text-right">
-            <Link
-              href="/forgot-password"
-              className="text-sm font-semibold text-[#214d35]"
-            >
-              Forgot password?
-            </Link>
-          </div>
           <PendingButton
-            idleLabel="Log in"
-            pendingLabel="Checking account..."
+            idleLabel="Send reset link"
+            pendingLabel="Sending reset link..."
             className="w-full rounded-full bg-[#214d35] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#183b28]"
           />
         </form>
 
         <p className="mt-6 text-center text-sm text-[#5b6a61]">
-          Need an account?{" "}
-          <Link href="/signup" className="font-semibold text-[#214d35]">
-            Sign up
+          Remembered your password?{" "}
+          <Link href="/login" className="font-semibold text-[#214d35]">
+            Log in
           </Link>
         </p>
       </section>

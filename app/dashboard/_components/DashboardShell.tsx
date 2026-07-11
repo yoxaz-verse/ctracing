@@ -13,18 +13,26 @@ export function DashboardShell({
   activeRole: "buyer" | "seller" | "admin";
   children: React.ReactNode;
 }) {
+  const workspaceLabel =
+    activeRole === "admin"
+      ? "Admin workspace"
+      : activeRole === "seller"
+        ? "Seller workspace"
+        : "Buyer workspace";
   const workflowLinks =
     activeRole === "buyer"
       ? [
           ["Overview", "/dashboard/buyer"],
           ["Projects", "/dashboard/buyer/projects"],
           ["Interests", "/dashboard/buyer/interests"],
+          ["Profile", "/dashboard/buyer/profile"],
         ]
       : activeRole === "seller"
         ? [
             ["Overview", "/dashboard/seller"],
             ["Projects", "/dashboard/seller/projects"],
             ["Inquiries", "/dashboard/seller/inquiries"],
+            ["Profile", "/dashboard/seller/profile"],
           ]
         : [
             ["Overview", "/dashboard/admin"],
@@ -41,42 +49,32 @@ export function DashboardShell({
             <Link href="/" className="text-xl font-semibold text-[#214d35]">
               TeraTrace
             </Link>
-            <p className="mt-1 text-sm text-[#6a756d]">
-              {profile.company_name || profile.email}
-            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-[#eef6ed] px-3 py-1 text-xs font-semibold text-[#214d35]">
+                {workspaceLabel}
+              </span>
+              <span className="text-sm text-[#6a756d]">
+                {profile.company_name || profile.email}
+              </span>
+              {profile.company_verification_status === "verified" ? (
+                <span className="rounded-full bg-[#214d35] px-3 py-1 text-xs font-semibold text-white">
+                  ✓ Verified company
+                </span>
+              ) : profile.role !== "admin" ? (
+                <span className="rounded-full bg-[#fff7df] px-3 py-1 text-xs font-semibold text-[#795b12]">
+                  Company {profile.company_verification_status ?? "pending"}
+                </span>
+              ) : null}
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <ThemeToggle />
-            <Link
-              href="/dashboard/buyer"
-              className={`rounded-full px-4 py-2 text-sm font-semibold ${
-                activeRole === "buyer"
-                  ? "bg-[#214d35] text-white"
-                  : "border border-[#c8d2c2] text-[#314239]"
-              }`}
-            >
-              Buyer dashboard
-            </Link>
-            <Link
-              href="/dashboard/seller"
-              className={`rounded-full px-4 py-2 text-sm font-semibold ${
-                activeRole === "seller"
-                  ? "bg-[#214d35] text-white"
-                  : "border border-[#c8d2c2] text-[#314239]"
-              }`}
-            >
-              Seller dashboard
-            </Link>
             {profile.role === "admin" ? (
               <Link
                 href="/dashboard/admin"
-                className={`rounded-full px-4 py-2 text-sm font-semibold ${
-                  activeRole === "admin"
-                    ? "bg-[#214d35] text-white"
-                    : "border border-[#c8d2c2] text-[#314239]"
-                }`}
+                className="rounded-full bg-[#214d35] px-4 py-2 text-sm font-semibold text-white"
               >
-                Admin dashboard
+                Admin
               </Link>
             ) : null}
             <form action={logOut}>
@@ -95,7 +93,7 @@ export function DashboardShell({
             <Link
               key={href}
               href={href}
-              className="whitespace-nowrap rounded-full border border-[#c8d2c2] bg-white px-4 py-2 text-sm font-semibold text-[#314239]"
+              className="whitespace-nowrap rounded-full border border-[#c8d2c2] bg-white px-4 py-2 text-sm font-semibold text-[#314239] hover:border-[#214d35]"
             >
               {label}
             </Link>

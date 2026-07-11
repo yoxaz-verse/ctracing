@@ -29,10 +29,6 @@ function getPositiveNumber(formData: FormData, key: string) {
   return value;
 }
 
-function cleanStatus(value: string) {
-  return value || "Documentation review";
-}
-
 function cleanLifecycleStatus(value: string) {
   return [
     "draft",
@@ -58,6 +54,12 @@ function cleanInterestStatus(value: string) {
     : "seller_review";
 }
 
+function cleanCompanyVerificationStatus(value: string) {
+  return ["pending", "verified", "needs_update"].includes(value)
+    ? value
+    : "pending";
+}
+
 function getOptionalNumber(formData: FormData, key: string) {
   const value = getString(formData, key);
   if (!value) {
@@ -68,9 +70,18 @@ function getOptionalNumber(formData: FormData, key: string) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function getOptionalDate(formData: FormData, key: string) {
+  const value = getString(formData, key);
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
+}
+
 function getRedirectPath(formData: FormData, fallback: string) {
   const value = getString(formData, "redirectTo");
   return value.startsWith("/dashboard/") ? value : fallback;
+}
+
+function formDataHas(formData: FormData, key: string) {
+  return formData.has(key);
 }
 
 async function recordAudit(
@@ -120,8 +131,8 @@ export async function createProject(formData: FormData) {
     methodology: getRequiredString(formData, "methodology"),
     available_credits: Math.round(getPositiveNumber(formData, "availableCredits")),
     price_per_credit: getPositiveNumber(formData, "pricePerCredit"),
-    verification_status: cleanStatus(getString(formData, "verificationStatus")),
-    lifecycle_status: cleanLifecycleStatus(getString(formData, "lifecycleStatus")),
+    verification_status: "Documentation review",
+    lifecycle_status: "draft",
     project_description: getString(formData, "projectDescription") || null,
     estimated_annual_credits: getOptionalNumber(formData, "estimatedAnnualCredits"),
     vintage_year: getOptionalNumber(formData, "vintageYear"),
@@ -145,7 +156,125 @@ export async function createProject(formData: FormData) {
   revalidatePath("/dashboard/seller");
   revalidatePath("/dashboard/seller/projects");
   revalidatePath("/dashboard/buyer");
+  revalidatePath("/dashboard/buyer/projects");
+  revalidatePath("/dashboard/admin/reviews");
+  revalidatePath(redirectTo);
   redirect(redirectTo);
+}
+
+export async function updateCompanyProfile(formData: FormData) {
+  const { supabase, profile } = await getSessionProfile();
+
+  if (profile.role !== "buyer" && profile.role !== "seller") {
+    redirectForRole(profile.role);
+  }
+
+  const redirectTo = getRedirectPath(
+    formData,
+    profile.role === "seller"
+      ? "/dashboard/seller/profile"
+      : "/dashboard/buyer/profile",
+  );
+  const companyName = getRequiredString(formData, "companyName");
+  const companyLocation = getRequiredString(formData, "companyLocation");
+  const contactName = getRequiredString(formData, "contactName");
+  const country = getRequiredString(formData, "country");
+  const registrationType = getString(formData, "registrationType");
+  const legalUpdate: Record<string, string | number | null> = {
+    company_name: companyName,
+    company_location: companyLocation,
+    contact_name: contactName,
+    country,
+    website: getString(formData, "website") || null,
+    incorporated_on: getOptionalDate(formData, "incorporatedOn"),
+    gstin: getString(formData, "gstin") || null,
+    gst_details: getString(formData, "gstDetails") || null,
+    registration_type: ["cin", "ngo", "other"].includes(registrationType)
+      ? registrationType
+      : null,
+    registration_number: getString(formData, "registrationNumber") || null,
+    onboarding_completed_at: new Date().toISOString(),
+  };
+
+  const roleUpdate =
+    profile.role === "buyer"
+      ? {
+          annual_credit_demand: getOptionalNumber(
+            formData,
+            "annualCreditDemand",
+          ),
+          preferred_project_types:
+            getString(formData, "preferredProjectTypes") || null,
+          carbon_purchase_goal:
+            getString(formData, "carbonPurchaseGoal") || null,
+        }
+      : {
+          annual_credit_supply: getOptionalNumber(
+            formData,
+            "annualCreditSupply",
+          ),
+          project_methodologies:
+            getString(formData, "projectMethodologies") || null,
+          registry_experience:
+            getString(formData, "registryExperience") || null,
+        };
+
+  const { data: currentProfile, error: readError } = await supabase
+    .from("profiles")
+    .select(
+      "company_name,company_location,contact_name,country,website,incorporated_on,gstin,gst_details,registration_type,registration_number,company_verification_status",
+    )
+    .eq("id", profile.id)
+    .maybeSingle<Record<string, string | null>>();
+
+  if (readError) {
+    redirect(`${redirectTo}?error=${encodeURIComponent(readError.message)}`);
+  }
+
+  const changedLegalFields = Object.entries(legalUpdate).some(([key, value]) => {
+    if (key === "onboarding_completed_at") {
+      return false;
+    }
+
+    return (currentProfile?.[key] ?? null) !== value;
+  });
+  const shouldResetVerification =
+    currentProfile?.company_verification_status === "verified" &&
+    changedLegalFields;
+  const update = {
+    ...legalUpdate,
+    ...roleUpdate,
+    ...(shouldResetVerification
+      ? {
+          company_verification_status: "pending",
+          company_verified_at: null,
+          company_verified_by: null,
+        }
+      : {}),
+  };
+
+  const { error } = await supabase
+    .from("profiles")
+    .update(update)
+    .eq("id", profile.id);
+
+  if (error) {
+    redirect(`${redirectTo}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  await recordAudit(supabase, "profile.updated", "profile", profile.id, {
+    role: profile.role,
+    company_verification_reset: shouldResetVerification,
+  });
+
+  revalidatePath("/dashboard/buyer");
+  revalidatePath("/dashboard/buyer/profile");
+  revalidatePath("/dashboard/seller");
+  revalidatePath("/dashboard/seller/profile");
+  revalidatePath("/dashboard/admin");
+  revalidatePath("/dashboard/admin/users");
+  revalidatePath(redirectTo);
+  redirect(`${redirectTo}?saved=1`);
 }
 
 export async function updateProject(formData: FormData) {
@@ -157,27 +286,41 @@ export async function updateProject(formData: FormData) {
 
   const projectId = getRequiredString(formData, "projectId");
   const redirectTo = getRedirectPath(formData, "/dashboard/seller/projects");
+  const update: Record<string, string | number | null> = {
+    project_name: getRequiredString(formData, "projectName"),
+    location: getRequiredString(formData, "location"),
+    methodology: getRequiredString(formData, "methodology"),
+    available_credits: Math.round(
+      getPositiveNumber(formData, "availableCredits"),
+    ),
+    price_per_credit: getPositiveNumber(formData, "pricePerCredit"),
+  };
+
+  if (formDataHas(formData, "projectDescription")) {
+    update.project_description = getString(formData, "projectDescription") || null;
+  }
+  if (formDataHas(formData, "estimatedAnnualCredits")) {
+    update.estimated_annual_credits = getOptionalNumber(
+      formData,
+      "estimatedAnnualCredits",
+    );
+  }
+  if (formDataHas(formData, "vintageYear")) {
+    update.vintage_year = getOptionalNumber(formData, "vintageYear");
+  }
+  if (formDataHas(formData, "registryName")) {
+    update.registry_name = getString(formData, "registryName") || null;
+  }
+  if (formDataHas(formData, "documentationScore")) {
+    update.documentation_score = Math.min(
+      100,
+      Math.max(0, Math.round(getOptionalNumber(formData, "documentationScore") ?? 0)),
+    );
+  }
+
   const { error } = await supabase
     .from("carbon_projects")
-    .update({
-      project_name: getRequiredString(formData, "projectName"),
-      location: getRequiredString(formData, "location"),
-      methodology: getRequiredString(formData, "methodology"),
-      available_credits: Math.round(
-        getPositiveNumber(formData, "availableCredits"),
-      ),
-      price_per_credit: getPositiveNumber(formData, "pricePerCredit"),
-      verification_status: cleanStatus(getString(formData, "verificationStatus")),
-      lifecycle_status: cleanLifecycleStatus(getString(formData, "lifecycleStatus")),
-      project_description: getString(formData, "projectDescription") || null,
-      estimated_annual_credits: getOptionalNumber(formData, "estimatedAnnualCredits"),
-      vintage_year: getOptionalNumber(formData, "vintageYear"),
-      registry_name: getString(formData, "registryName") || null,
-      documentation_score: Math.min(
-        100,
-        Math.max(0, Math.round(getOptionalNumber(formData, "documentationScore") ?? 0)),
-      ),
-    })
+    .update(update)
     .eq("id", projectId)
     .eq("seller_id", profile.id);
 
@@ -190,6 +333,9 @@ export async function updateProject(formData: FormData) {
   revalidatePath("/dashboard/seller");
   revalidatePath("/dashboard/seller/projects");
   revalidatePath("/dashboard/buyer");
+  revalidatePath("/dashboard/buyer/projects");
+  revalidatePath("/dashboard/admin/reviews");
+  revalidatePath(redirectTo);
   redirect(redirectTo);
 }
 
@@ -217,6 +363,9 @@ export async function deleteProject(formData: FormData) {
   revalidatePath("/dashboard/seller");
   revalidatePath("/dashboard/seller/projects");
   revalidatePath("/dashboard/buyer");
+  revalidatePath("/dashboard/buyer/projects");
+  revalidatePath("/dashboard/admin/reviews");
+  revalidatePath(redirectTo);
   redirect(redirectTo);
 }
 
@@ -339,15 +488,18 @@ export async function submitProjectForReview(formData: FormData) {
     .from("carbon_projects")
     .update({ lifecycle_status: "submitted" })
     .eq("id", projectId)
-    .eq("seller_id", profile.id);
+    .eq("seller_id", profile.id)
+    .neq("lifecycle_status", "listed");
 
   if (error) {
     redirect(`${redirectTo}?error=${encodeURIComponent(error.message)}`);
   }
 
   await recordAudit(supabase, "project.submitted_for_review", "carbon_project", projectId);
+  revalidatePath("/dashboard/seller");
   revalidatePath("/dashboard/seller/projects");
   revalidatePath("/dashboard/admin/reviews");
+  revalidatePath(redirectTo);
   redirect(redirectTo);
 }
 
@@ -374,6 +526,7 @@ export async function addProjectDocument(formData: FormData) {
   await recordAudit(supabase, "project_document.added", "carbon_project", projectId);
   revalidatePath("/dashboard/seller/projects");
   revalidatePath("/dashboard/admin/reviews");
+  revalidatePath(redirectTo);
   redirect(redirectTo);
 }
 
@@ -413,7 +566,83 @@ export async function adminReviewProject(formData: FormData) {
   });
   revalidatePath("/dashboard/admin");
   revalidatePath("/dashboard/admin/reviews");
+  revalidatePath("/dashboard/buyer");
   revalidatePath("/dashboard/buyer/projects");
+  redirect(redirectTo);
+}
+
+export async function adminReviewCompanyProfile(formData: FormData) {
+  const { supabase, profile } = await getSessionProfile();
+  if (profile.role !== "admin") {
+    redirectForRole(profile.role);
+  }
+
+  const userId = getRequiredString(formData, "userId");
+  const decisionStatus = cleanCompanyVerificationStatus(
+    getRequiredString(formData, "companyVerificationStatus"),
+  );
+  const reviewNote = getString(formData, "companyVerificationNote");
+  const redirectTo = getRedirectPath(formData, "/dashboard/admin/users");
+  const now = new Date().toISOString();
+
+  const { data: reviewedProfile, error: readError } = await supabase
+    .from("profiles")
+    .select("id,email,role,company_name")
+    .eq("id", userId)
+    .maybeSingle<{
+      id: string;
+      email: string;
+      role: string;
+      company_name: string | null;
+    }>();
+
+  if (readError) {
+    redirect(`${redirectTo}?error=${encodeURIComponent(readError.message)}`);
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      company_verification_status: decisionStatus,
+      company_verified_at: decisionStatus === "verified" ? now : null,
+      company_verified_by: decisionStatus === "verified" ? profile.id : null,
+      company_verification_note: reviewNote || null,
+    })
+    .eq("id", userId)
+    .in("role", ["buyer", "seller"]);
+
+  if (error) {
+    redirect(`${redirectTo}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  await recordAudit(supabase, "company_profile.reviewed", "profile", userId, {
+    decision_status: decisionStatus,
+  });
+
+  if (reviewedProfile) {
+    await notifyUser(
+      supabase,
+      userId,
+      decisionStatus === "verified"
+        ? "Company profile verified"
+        : "Company profile needs review",
+      decisionStatus === "verified"
+        ? "An admin verified your company profile. Your workspace now shows a verified company badge."
+        : reviewNote ||
+            "An admin reviewed your company profile and requested updates.",
+      reviewedProfile.role === "seller"
+        ? "/dashboard/seller/profile"
+        : "/dashboard/buyer/profile",
+    );
+  }
+
+  revalidatePath("/dashboard/admin");
+  revalidatePath("/dashboard/admin/users");
+  revalidatePath("/dashboard/buyer");
+  revalidatePath("/dashboard/buyer/profile");
+  revalidatePath("/dashboard/seller");
+  revalidatePath("/dashboard/seller/profile");
+  revalidatePath(redirectTo);
   redirect(redirectTo);
 }
 

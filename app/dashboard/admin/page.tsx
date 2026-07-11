@@ -34,7 +34,9 @@ export default async function AdminDashboardPage() {
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id,email,role,company_name,email_verified_at")
+      .select(
+        "id,email,role,company_name,contact_name,website,country,company_location,company_verification_status,email_verified_at,onboarding_completed_at",
+      )
       .order("email", { ascending: true })
       .returns<Profile[]>(),
     supabase
@@ -123,7 +125,14 @@ export default async function AdminDashboardPage() {
                         <td className="py-3 pr-4">{row.email}</td>
                         <td className="py-3 pr-4 capitalize">{row.role}</td>
                         <td className="py-3 pr-4">
-                          {row.email_verified_at ? "Verified" : "Pending"}
+                          <span className="mr-2">
+                            {row.email_verified_at ? "Email verified" : "Email pending"}
+                          </span>
+                          {row.role !== "admin" ? (
+                            <span>
+                              Company {row.company_verification_status ?? "pending"}
+                            </span>
+                          ) : null}
                         </td>
                       </tr>
                     ))}

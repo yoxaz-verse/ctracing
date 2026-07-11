@@ -1,4 +1,5 @@
 export type UserRole = "buyer" | "seller" | "admin";
+export type CompanyVerificationStatus = "pending" | "verified" | "needs_update";
 export type ProjectLifecycleStatus =
   | "draft"
   | "submitted"
@@ -21,6 +22,22 @@ export type Profile = {
   contact_name?: string | null;
   website?: string | null;
   country?: string | null;
+  company_location?: string | null;
+  incorporated_on?: string | null;
+  gstin?: string | null;
+  gst_details?: string | null;
+  registration_type?: string | null;
+  registration_number?: string | null;
+  annual_credit_demand?: number | null;
+  preferred_project_types?: string | null;
+  carbon_purchase_goal?: string | null;
+  annual_credit_supply?: number | null;
+  project_methodologies?: string | null;
+  registry_experience?: string | null;
+  company_verification_status?: CompanyVerificationStatus | null;
+  company_verified_at?: string | null;
+  company_verified_by?: string | null;
+  company_verification_note?: string | null;
   email_verified_at: string | null;
   onboarding_completed_at?: string | null;
 };

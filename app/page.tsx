@@ -67,7 +67,7 @@ const rolePanels = [
     title: "Turn project inventory into clear market signals.",
     items: [
       "Create structured listings for estimated carbon credit supply.",
-      "Update verification status as documentation matures.",
+      "Submit project documentation for admin review.",
       "Review demand signals tied to seller-owned projects.",
     ],
   },

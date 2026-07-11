@@ -1,13 +1,17 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { resendVerificationEmail } from "@/app/auth/actions";
-import { PendingButton } from "@/app/_components/PendingButton";
 import { AutoSendVerificationEmail } from "./AutoSendVerificationEmail";
+import { ResendVerificationEmailButton } from "./ResendVerificationEmailButton";
 import { createClient } from "@/lib/supabase/server";
+import { getVerificationResendAvailability } from "@/lib/email-verification-resend";
 import { ThemeToggle } from "@/app/_components/ThemeToggle";
 import type { Profile, UserRole } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+
+const profileSelect =
+  "id,email,role,company_name,contact_name,website,country,company_location,incorporated_on,gstin,gst_details,registration_type,registration_number,annual_credit_demand,preferred_project_types,carbon_purchase_goal,annual_credit_supply,project_methodologies,registry_experience,company_verification_status,company_verified_at,company_verified_by,company_verification_note,email_verified_at,onboarding_completed_at";
 
 export default async function VerificationPendingPage({
   searchParams,
@@ -26,7 +30,7 @@ export default async function VerificationPendingPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id,email,role,company_name,email_verified_at")
+    .select(profileSelect)
     .eq("id", user.id)
     .maybeSingle<Profile>();
 
@@ -35,6 +39,15 @@ export default async function VerificationPendingPage({
 
   if (profile?.email_verified_at) {
     redirect(role === "seller" ? "/dashboard/seller" : "/dashboard/buyer");
+  }
+
+  let initialResendAvailableAt: string | null = null;
+
+  try {
+    const availability = await getVerificationResendAvailability(supabase, user.id);
+    initialResendAvailableAt = availability.cooldownAvailableAt;
+  } catch {
+    initialResendAvailableAt = null;
   }
 
   return (
@@ -73,9 +86,8 @@ export default async function VerificationPendingPage({
         ) : null}
 
         <form action={resendVerificationEmail} className="mt-6">
-          <PendingButton
-            idleLabel="Resend verification email"
-            pendingLabel="Sending email..."
+          <ResendVerificationEmailButton
+            initialAvailableAt={initialResendAvailableAt}
             className="w-full rounded-full bg-[#214d35] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#183b28]"
           />
         </form>

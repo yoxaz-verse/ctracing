@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
-import {
-  createVerificationToken,
-  sendVerificationEmail,
-} from "@/lib/email-verification";
+import { requestVerificationEmailResend } from "@/lib/email-verification-resend";
 import { createClient } from "@/lib/supabase/server";
-import type { Profile, UserRole } from "@/lib/types";
+import type { UserRole } from "@/lib/types";
 
 type AuthMetadata = {
   role?: unknown;
@@ -12,6 +9,10 @@ type AuthMetadata = {
 };
 
 function getMetadataRole(metadata: AuthMetadata | null | undefined): UserRole {
+  if (metadata?.role === "admin") {
+    return "admin";
+  }
+
   return metadata?.role === "seller" ? "seller" : "buyer";
 }
 
@@ -50,50 +51,30 @@ export async function POST() {
   const fallbackRole = getMetadataRole(metadata);
   const fallbackCompanyName = getMetadataCompanyName(metadata);
 
-  const { data: profile, error: profileReadError } = await supabase
-    .from("profiles")
-    .select("id,email,role,company_name,email_verified_at")
-    .eq("id", user.id)
-    .maybeSingle<Profile>();
-
-  if (profileReadError) {
-    return NextResponse.json(
-      { message: profileReadError.message },
-      { status: 400 },
-    );
-  }
-
-  if (profile?.email_verified_at) {
-    return NextResponse.json({ message: "Email is already verified." });
-  }
-
-  if (!profile) {
-    const { error: profileInsertError } = await supabase.from("profiles").upsert({
-      id: user.id,
+  try {
+    const result = await requestVerificationEmailResend({
+      supabase,
+      userId: user.id,
       email: user.email ?? "",
-      role: fallbackRole,
-      company_name: fallbackCompanyName || null,
-      email_verified_at: null,
+      fallbackRole,
+      fallbackCompanyName,
     });
 
-    if (profileInsertError) {
+    if (!result.ok) {
       return NextResponse.json(
-        { message: profileInsertError.message },
-        { status: 400 },
+        {
+          message: result.message,
+          cooldownAvailableAt: result.cooldownAvailableAt,
+          retryAfterSeconds: result.retryAfterSeconds,
+        },
+        { status: result.status },
       );
     }
-  }
-
-  try {
-    const token = await createVerificationToken(user.id);
-    await sendVerificationEmail({
-      email: user.email ?? profile?.email ?? "",
-      companyName: profile?.company_name ?? fallbackCompanyName,
-      token,
-    });
 
     return NextResponse.json({
-      message: "Verification email sent from TeraTrace.",
+      message: result.message,
+      cooldownAvailableAt: result.cooldownAvailableAt,
+      alreadyVerified: result.alreadyVerified,
     });
   } catch (error) {
     return NextResponse.json({ message: errorMessage(error) }, { status: 400 });

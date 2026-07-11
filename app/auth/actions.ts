@@ -1,7 +1,12 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createVerificationToken, sendVerificationEmail } from "@/lib/email-verification";
+import { requestVerificationEmailResend } from "@/lib/email-verification-resend";
+import {
+  createPasswordResetToken,
+  sendPasswordResetEmail,
+  updatePasswordWithResetToken,
+} from "@/lib/password-reset";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile, UserRole } from "@/lib/types";
 
@@ -9,6 +14,9 @@ type AuthMetadata = {
   role?: unknown;
   company_name?: unknown;
 };
+
+const profileSelect =
+  "id,email,role,company_name,contact_name,website,country,company_location,incorporated_on,gstin,gst_details,registration_type,registration_number,annual_credit_demand,preferred_project_types,carbon_purchase_goal,annual_credit_supply,project_methodologies,registry_experience,company_verification_status,company_verified_at,company_verified_by,company_verification_note,email_verified_at,onboarding_completed_at";
 
 function getString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -83,7 +91,12 @@ function messageFromError(error: unknown, fallback: string) {
 }
 
 function redirectWithError(
-  path: "/login" | "/signup" | "/verify-email/pending",
+  path:
+    | "/login"
+    | "/signup"
+    | "/verify-email/pending"
+    | "/forgot-password"
+    | "/reset-password",
   error: unknown,
 ): never {
   const message = messageFromError(
@@ -91,6 +104,14 @@ function redirectWithError(
     "Something went wrong. Check your Supabase Auth logs for the reference shown in the server output.",
   );
   redirect(`${path}?error=${encodeURIComponent(message)}`);
+}
+
+function redirectWithErrorAndToken(path: "/reset-password", token: string, error: unknown): never {
+  const message = messageFromError(
+    error,
+    "Something went wrong. Check the server logs and try again.",
+  );
+  redirect(`${path}?token=${encodeURIComponent(token)}&error=${encodeURIComponent(message)}`);
 }
 
 function redirectSupabaseConfirmationEnabled(): never {
@@ -115,7 +136,7 @@ async function ensureProfile({
 }) {
   const { data: profile, error: readError } = await supabase
     .from("profiles")
-    .select("id,email,role,company_name,email_verified_at")
+    .select(profileSelect)
     .eq("id", id)
     .maybeSingle<Profile>();
 
@@ -138,9 +159,10 @@ async function ensureProfile({
       email,
       role,
       company_name: companyName || null,
+      company_verification_status: "pending",
       email_verified_at: null,
     })
-    .select("id,email,role,company_name,email_verified_at")
+    .select(profileSelect)
     .single<Profile>();
 
   return { profile: createdProfile ?? null, role, error: upsertError };
@@ -243,6 +265,44 @@ export async function logIn(formData: FormData) {
   redirect(getRolePath(role));
 }
 
+export async function requestPasswordReset(formData: FormData) {
+  const email = getString(formData, "email");
+
+  if (!email) {
+    redirectWithError("/forgot-password", "Enter your account email address.");
+  }
+
+  try {
+    const reset = await createPasswordResetToken(email);
+
+    if (reset) {
+      await sendPasswordResetEmail(reset);
+    }
+  } catch (error) {
+    redirectWithError("/forgot-password", error);
+  }
+
+  redirect("/forgot-password?sent=1");
+}
+
+export async function resetPassword(formData: FormData) {
+  const token = getString(formData, "token");
+  const password = getString(formData, "password");
+  const confirmPassword = getString(formData, "confirmPassword");
+
+  if (password !== confirmPassword) {
+    redirectWithErrorAndToken("/reset-password", token, "Passwords do not match.");
+  }
+
+  const result = await updatePasswordWithResetToken({ token, password });
+
+  if (!result.ok) {
+    redirectWithErrorAndToken("/reset-password", token, result.message);
+  }
+
+  redirect(`/login?message=${encodeURIComponent(result.message)}`);
+}
+
 export async function resendVerificationEmail() {
   const supabase = await createClient();
   const {
@@ -273,15 +333,22 @@ export async function resendVerificationEmail() {
     redirect(getRolePath(profile.role));
   }
 
+  let resendResult: Awaited<ReturnType<typeof requestVerificationEmailResend>>;
+
   try {
-    const token = await createVerificationToken(user.id);
-    await sendVerificationEmail({
+    resendResult = await requestVerificationEmailResend({
+      supabase,
+      userId: user.id,
       email: user.email ?? profile?.email ?? "",
-      companyName: profile?.company_name ?? fallbackCompanyName,
-      token,
+      fallbackRole,
+      fallbackCompanyName,
     });
   } catch (sendError) {
     redirectWithError("/verify-email/pending", sendError);
+  }
+
+  if (!resendResult.ok) {
+    redirectWithError("/verify-email/pending", resendResult.message);
   }
 
   redirect("/verify-email/pending?sent=1");

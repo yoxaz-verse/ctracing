@@ -9,6 +9,12 @@ const statusStyles: Record<string, string> = {
   more_info_requested: "bg-[#fff1ed] text-[#8a2c16]",
   qualified: "bg-[#eef6ed] text-[#214d35]",
   closed: "bg-[#f3f6f0] text-[#6a756d]",
+  buyer: "bg-[#eef6ed] text-[#214d35]",
+  seller: "bg-[#eef6ed] text-[#214d35]",
+  admin: "bg-[#17201b] text-white",
+  pending: "bg-[#fff7df] text-[#795b12]",
+  verified: "bg-[#eef6ed] text-[#214d35]",
+  needs_update: "bg-[#fff1ed] text-[#8a2c16]",
 };
 
 export function StatusBadge({ status }: { status: string | null | undefined }) {

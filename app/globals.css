@@ -254,6 +254,71 @@ textarea::placeholder {
   animation: loading-shimmer 1.25s ease-in-out infinite;
 }
 
+.carbon-loader {
+  overflow: hidden;
+}
+
+.carbon-loader::before {
+  content: "";
+  position: absolute;
+  inset: -30%;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(215, 249, 111, 0.28), transparent 24%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.18), transparent 48%);
+}
+
+.carbon-loader__orbit {
+  animation: carbon-orbit 1.45s linear infinite;
+}
+
+.carbon-loader__credit {
+  box-shadow: 0 0 18px rgba(215, 249, 111, 0.6);
+}
+
+.carbon-loader__leaf {
+  transform-origin: 50% 120%;
+  animation: carbon-leaf 1.45s ease-in-out infinite;
+}
+
+.carbon-loader__leaf::after {
+  content: "";
+  position: absolute;
+  inset: 4px 5px 3px 4px;
+  border-left: 1px solid rgba(23, 32, 27, 0.42);
+  transform: rotate(28deg);
+}
+
+.carbon-loader__pulse {
+  animation: carbon-pulse 1.45s ease-in-out infinite;
+}
+
+.carbon-flow__line {
+  position: relative;
+  overflow: hidden;
+}
+
+.carbon-flow__line::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -1.25rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(215, 249, 111, 0.22);
+  transform: translateY(-50%);
+  animation: carbon-flow 1.65s ease-in-out infinite;
+}
+
+.carbon-flow__line:nth-child(2)::after {
+  animation-delay: 180ms;
+}
+
+.carbon-flow__line:nth-child(3)::after {
+  animation-delay: 320ms;
+}
+
 @keyframes loading-shimmer {
   0% {
     background-position: 120% 0;
@@ -263,8 +328,55 @@ textarea::placeholder {
   }
 }
 
+@keyframes carbon-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes carbon-leaf {
+  0%,
+  100% {
+    transform: translateX(-50%) rotate(-12deg) scale(0.95);
+  }
+  50% {
+    transform: translateX(-50%) rotate(10deg) scale(1.08);
+  }
+}
+
+@keyframes carbon-pulse {
+  0%,
+  100% {
+    opacity: 0.24;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 0.58;
+    transform: scale(1.12);
+  }
+}
+
+@keyframes carbon-flow {
+  0% {
+    left: -1.25rem;
+    opacity: 0;
+  }
+  18%,
+  78% {
+    opacity: 1;
+  }
+  100% {
+    left: calc(100% + 1.25rem);
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .loading-shimmer {
+  .loading-shimmer,
+  .carbon-loader__orbit,
+  .carbon-loader__leaf,
+  .carbon-loader__pulse,
+  .carbon-flow__line::after {
     animation: none;
   }
 }

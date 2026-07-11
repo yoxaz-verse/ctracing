@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { rememberVerificationResendCooldown } from "./resendCooldown";
 
 type SendState = "idle" | "sending" | "sent" | "failed";
 
@@ -26,7 +27,10 @@ export function AutoSendVerificationEmail({ shouldSend }: { shouldSend: boolean 
             "Content-Type": "application/json",
           },
         });
-        const body = (await response.json()) as { message?: string };
+        const body = (await response.json()) as {
+          message?: string;
+          cooldownAvailableAt?: string | null;
+        };
 
         if (cancelled) {
           return;
@@ -34,6 +38,10 @@ export function AutoSendVerificationEmail({ shouldSend }: { shouldSend: boolean 
 
         setMessage(body.message ?? "Verification email request finished.");
         setState(response.ok ? "sent" : "failed");
+
+        if (response.ok || response.status === 429) {
+          rememberVerificationResendCooldown(body.cooldownAvailableAt);
+        }
       } catch {
         if (!cancelled) {
           setState("failed");

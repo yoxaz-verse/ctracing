@@ -3,7 +3,7 @@
 TeraTrace is a Next.js and Supabase foundation for a carbon credit marketplace.
 The first version includes a public homepage, Supabase-backed authentication,
 app-controlled SMTP email verification, role selection at signup, and protected
-buyer and seller dashboards.
+buyer, seller, and admin dashboards.
 
 ## Prerequisites
 
@@ -30,15 +30,37 @@ For an existing database, apply `supabase/email-verification-migration.sql`.
 In Supabase Auth settings, disable built-in email confirmation so Supabase does
 not send verification emails; TeraTrace sends its own SMTP verification link.
 
+## Create First Admin
+
+Admins use the normal `/login` form. Public signup only lets users create buyer
+or seller profiles, so create an account first, verify its email, then promote
+that profile manually in Supabase:
+
+```sql
+update public.profiles
+set role = 'admin'
+where email = 'your-email@example.com';
+```
+
+For local development only, if the test account is blocked waiting for email
+verification, you can mark it verified:
+
+```sql
+update public.profiles
+set email_verified_at = now()
+where email = 'your-email@example.com';
+```
+
 ## Routes
 
 - `/` public homepage
 - `/signup` account creation with buyer or seller role selection
-- `/login` email/password login
+- `/login` email/password login for buyers, sellers, and promoted admins
 - `/verify-email` app-owned verification link handler
 - `/verify-email/pending` resend/check-email screen
 - `/dashboard/buyer` protected buyer workspace
 - `/dashboard/seller` protected seller workspace
+- `/dashboard/admin` protected admin workspace
 
 ## Useful Commands
 
