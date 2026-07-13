@@ -120,6 +120,55 @@ export type Notification = {
   created_at?: string;
 };
 
+export type ProjectEstimate = {
+  id: string;
+  user_id: string;
+  project_type: string;
+  registry_pathway: string;
+  methodology_reference: string;
+  country: string | null;
+  state: string | null;
+  location: string | null;
+  input_data_json: Record<string, unknown>;
+  assumptions_json: Record<string, unknown>;
+  gross_impact_tco2e: number;
+  baseline_deduction_tco2e: number;
+  leakage_deduction_tco2e: number;
+  uncertainty_deduction_tco2e: number;
+  buffer_deduction_tco2e: number;
+  project_emissions_tco2e: number;
+  net_estimated_credits: number;
+  estimated_plastic_credits: number;
+  estimated_co2e_benefit: number;
+  estimated_value: number;
+  readiness_score: number;
+  confidence_level: string;
+  missing_evidence_json: string[];
+  disclaimer_text: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type EmissionFactor = {
+  id: string;
+  name: string;
+  project_type: string;
+  plastic_type: string | null;
+  country: string | null;
+  region: string | null;
+  unit: string;
+  value: number;
+  default_low: number | null;
+  default_medium: number | null;
+  default_high: number | null;
+  source_name: string | null;
+  source_url: string | null;
+  version: string | null;
+  is_admin_editable: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
 export type AuditLog = {
   id: string;
   actor_id: string | null;

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSessionProfile, redirectForRole } from "@/lib/auth";
+import { ESTIMATE_DISCLAIMER } from "@/lib/estimator/config";
 
 function getString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -78,6 +79,32 @@ function getOptionalDate(formData: FormData, key: string) {
 function getRedirectPath(formData: FormData, fallback: string) {
   const value = getString(formData, "redirectTo");
   return value.startsWith("/dashboard/") ? value : fallback;
+}
+
+function getJsonObject(formData: FormData, key: string) {
+  const value = getString(formData, key);
+  if (!value) {
+    throw new Error(`${key} is required.`);
+  }
+
+  const parsed = JSON.parse(value);
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error(`${key} must be a JSON object.`);
+  }
+
+  return parsed as Record<string, unknown>;
+}
+
+function asFiniteNumber(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function cleanFactorUpdate(value: number, min = 0, max = Number.POSITIVE_INFINITY) {
+  if (!Number.isFinite(value)) {
+    return min;
+  }
+
+  return Math.min(max, Math.max(min, value));
 }
 
 function formDataHas(formData: FormData, key: string) {
@@ -160,6 +187,94 @@ export async function createProject(formData: FormData) {
   revalidatePath("/dashboard/admin/reviews");
   revalidatePath(redirectTo);
   redirect(redirectTo);
+}
+
+export async function saveProjectEstimate(formData: FormData) {
+  const { supabase, profile } = await getSessionProfile();
+  const inputData = getJsonObject(formData, "inputDataJson");
+  const resultData = getJsonObject(formData, "resultDataJson");
+  const redirectTo = getRedirectPath(formData, "/dashboard/estimator");
+  const missingEvidence = Array.isArray(resultData.missingEvidence)
+    ? resultData.missingEvidence.filter((item): item is string => typeof item === "string")
+    : [];
+
+  const { data, error } = await supabase
+    .from("project_estimates")
+    .insert({
+      user_id: profile.id,
+      project_type: String(resultData.projectType ?? inputData.projectType ?? "Unknown"),
+      registry_pathway: String(
+        resultData.registryPathway ?? inputData.registryPathway ?? "Not sure",
+      ),
+      methodology_reference: String(resultData.methodologyReference ?? ""),
+      country: typeof inputData.country === "string" ? inputData.country : null,
+      state: typeof inputData.state === "string" ? inputData.state : null,
+      location: typeof inputData.location === "string" ? inputData.location : null,
+      input_data_json: inputData,
+      assumptions_json: resultData,
+      gross_impact_tco2e: asFiniteNumber(resultData.grossImpactTco2e),
+      baseline_deduction_tco2e: asFiniteNumber(resultData.baselineDeductionTco2e),
+      leakage_deduction_tco2e: asFiniteNumber(resultData.leakageDeductionTco2e),
+      uncertainty_deduction_tco2e: asFiniteNumber(resultData.uncertaintyDeductionTco2e),
+      buffer_deduction_tco2e: asFiniteNumber(resultData.bufferDeductionTco2e),
+      project_emissions_tco2e: asFiniteNumber(resultData.projectEmissionsTco2e),
+      net_estimated_credits: asFiniteNumber(resultData.netEstimatedCredits),
+      estimated_plastic_credits: asFiniteNumber(resultData.estimatedPlasticCredits),
+      estimated_co2e_benefit: asFiniteNumber(resultData.estimatedCo2eBenefitKg),
+      estimated_value: asFiniteNumber(resultData.estimatedValue),
+      readiness_score: Math.round(asFiniteNumber(resultData.readinessScore)),
+      confidence_level: String(resultData.confidenceLevel ?? "Low confidence"),
+      missing_evidence_json: missingEvidence,
+      disclaimer_text: String(resultData.disclaimerText ?? ESTIMATE_DISCLAIMER),
+    })
+    .select("id")
+    .single<{ id: string }>();
+
+  if (error) {
+    redirect(`${redirectTo}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  await recordAudit(supabase, "project_estimate.saved", "project_estimate", data?.id ?? null, {
+    project_type: resultData.projectType,
+  });
+
+  revalidatePath("/dashboard/estimator");
+  redirect(`${redirectTo}?savedEstimateId=${encodeURIComponent(data?.id ?? "")}`);
+}
+
+export async function updateEmissionFactor(formData: FormData) {
+  const { supabase, profile } = await getSessionProfile();
+  if (profile.role !== "admin") {
+    redirectForRole(profile.role);
+  }
+
+  const factorId = getRequiredString(formData, "factorId");
+  const value = cleanFactorUpdate(getPositiveNumber(formData, "value"));
+  const defaultLow = getOptionalNumber(formData, "defaultLow");
+  const defaultMedium = getOptionalNumber(formData, "defaultMedium");
+  const defaultHigh = getOptionalNumber(formData, "defaultHigh");
+  const redirectTo = getRedirectPath(formData, "/dashboard/admin/factors");
+  const { error } = await supabase
+    .from("emission_factors")
+    .update({
+      value,
+      default_low: defaultLow === null ? null : cleanFactorUpdate(defaultLow),
+      default_medium: defaultMedium === null ? null : cleanFactorUpdate(defaultMedium),
+      default_high: defaultHigh === null ? null : cleanFactorUpdate(defaultHigh),
+      source_name: getString(formData, "sourceName") || null,
+      source_url: getString(formData, "sourceUrl") || null,
+      version: getString(formData, "version") || null,
+    })
+    .eq("id", factorId)
+    .eq("is_admin_editable", true);
+
+  if (error) {
+    redirect(`${redirectTo}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  await recordAudit(supabase, "emission_factor.updated", "emission_factor", factorId);
+  revalidatePath("/dashboard/admin/factors");
+  redirect(`${redirectTo}?saved=1`);
 }
 
 export async function updateCompanyProfile(formData: FormData) {

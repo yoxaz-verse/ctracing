@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CarbonEstimator } from "@/app/_components/CarbonEstimator";
 import { ThemeToggle } from "@/app/_components/ThemeToggle";
 import { createClient } from "@/lib/supabase/server";
 
@@ -464,6 +465,28 @@ export default async function Home() {
               <MetricTile key={stat.label} {...stat} />
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="border-b border-[var(--border)] bg-[var(--surface-soft)]">
+        <div className="mx-auto max-w-7xl px-5 py-16 lg:px-6">
+          <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--brand-soft)]">
+                Try the estimator
+              </p>
+              <h2 className="mt-3 max-w-3xl text-3xl font-semibold tracking-tight text-[var(--text-heading)] md:text-4xl">
+                Explore estimated impact before creating a workspace.
+              </h2>
+            </div>
+            <Link
+              href="/estimator"
+              className="w-fit rounded-full border border-[var(--border-strong)] bg-[var(--surface)] px-5 py-3 text-sm font-semibold text-[var(--brand)]"
+            >
+              Open full estimator
+            </Link>
+          </div>
+          <CarbonEstimator mode="public" />
         </div>
       </section>
 

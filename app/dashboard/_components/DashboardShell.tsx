@@ -23,6 +23,7 @@ export function DashboardShell({
     activeRole === "buyer"
       ? [
           ["Overview", "/dashboard/buyer"],
+          ["Estimator", "/dashboard/estimator"],
           ["Projects", "/dashboard/buyer/projects"],
           ["Interests", "/dashboard/buyer/interests"],
           ["Profile", "/dashboard/buyer/profile"],
@@ -30,12 +31,15 @@ export function DashboardShell({
       : activeRole === "seller"
         ? [
             ["Overview", "/dashboard/seller"],
+            ["Estimator", "/dashboard/estimator"],
             ["Projects", "/dashboard/seller/projects"],
             ["Inquiries", "/dashboard/seller/inquiries"],
             ["Profile", "/dashboard/seller/profile"],
           ]
         : [
             ["Overview", "/dashboard/admin"],
+            ["Estimator", "/dashboard/estimator"],
+            ["Factors", "/dashboard/admin/factors"],
             ["Reviews", "/dashboard/admin/reviews"],
             ["Users", "/dashboard/admin/users"],
             ["Audit", "/dashboard/admin/audit"],
