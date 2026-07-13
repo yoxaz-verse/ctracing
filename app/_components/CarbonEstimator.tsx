@@ -73,6 +73,38 @@ const plasticInputMethods: PlasticInputMethod[] = [
   "Weight in kg",
   "Weight in MT",
 ];
+const estimatorSteps = [
+  {
+    id: 1,
+    label: "Project",
+    detail: "Choose project type, location, registry, duration, and currency.",
+  },
+  {
+    id: 2,
+    label: "Inputs",
+    detail: "Enter project-specific activity, area, trees, mangroves, or plastic data.",
+  },
+  {
+    id: 3,
+    label: "Assumptions",
+    detail: "Review default factors, deductions, and credit price assumptions.",
+  },
+  {
+    id: 4,
+    label: "Results",
+    detail: "See estimated credits, value, impact, deductions, and charts.",
+  },
+  {
+    id: 5,
+    label: "Evidence",
+    detail: "Check missing documents and registry-readiness score.",
+  },
+  {
+    id: 6,
+    label: "Export",
+    detail: "Review structured estimate data for future PDF or CSV export.",
+  },
+];
 
 const inputClass =
   "mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm outline-none focus:border-[var(--brand)]";
@@ -448,6 +480,7 @@ export function CarbonEstimator({
   const isPlastic = projectType === "Plastic Waste Recycling";
   const isMangrove = projectType === "Mangrove Restoration";
   const isAgroforestry = projectType === "Agroforestry";
+  const currentStep = estimatorSteps.find((item) => item.id === step) ?? estimatorSteps[0];
 
   function updateScenario(value: string) {
     setScenario(value);
@@ -503,22 +536,34 @@ export function CarbonEstimator({
             Explore ARR, agroforestry, mangrove, and plastic recycling credit potential with methodology-aligned assumptions.
           </p>
         </div>
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-          {[1, 2, 3, 4, 5, 6].map((item) => (
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+          {estimatorSteps.map((item) => (
             <button
-              key={item}
+              key={item.id}
               type="button"
-              onClick={() => setStep(item)}
-              className={`h-10 rounded-full border text-sm font-semibold ${
-                step === item
+              onClick={() => setStep(item.id)}
+              className={`min-h-14 rounded-2xl border px-3 py-2 text-left text-sm ${
+                step === item.id
                   ? "border-[var(--brand)] bg-[var(--brand)] text-[var(--surface)]"
                   : "border-[var(--border)] bg-[var(--surface-subtle)] text-[var(--text-label)]"
               }`}
             >
-              {item}
+              <span className="block text-xs font-semibold opacity-75">
+                Step {item.id}
+              </span>
+              <span className="block font-semibold">{item.label}</span>
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="mt-5 rounded-2xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
+        <p className="text-sm font-semibold text-[var(--text-heading)]">
+          Step {currentStep.id}: {currentStep.label}
+        </p>
+        <p className="mt-1 text-sm leading-6 text-[var(--text-muted)]">
+          {currentStep.detail}
+        </p>
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_0.38fr]">
