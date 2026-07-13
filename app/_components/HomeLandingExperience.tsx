@@ -293,14 +293,14 @@ export function HomeLandingExperience({
   unavailable,
 }: HomeLandingExperienceProps) {
   const [activeChapter, setActiveChapter] = useState(0);
-  const markersRef = useRef<Array<HTMLDivElement | null>>([]);
+  const stepsRef = useRef<Array<HTMLDivElement | null>>([]);
   const projects = summary.latest_projects;
   const hasProjects = projects.length > 0;
   const active = chapters[activeChapter] ?? chapters[0];
 
   useEffect(() => {
-    const markers = markersRef.current.filter(Boolean) as HTMLDivElement[];
-    if (!markers.length) {
+    const steps = stepsRef.current.filter(Boolean) as HTMLDivElement[];
+    if (!steps.length) {
       return;
     }
 
@@ -320,9 +320,17 @@ export function HomeLandingExperience({
       },
     );
 
-    markers.forEach((marker) => observer.observe(marker));
+    steps.forEach((step) => observer.observe(step));
     return () => observer.disconnect();
   }, []);
+
+  function handleChapterClick(index: number) {
+    setActiveChapter(index);
+    stepsRef.current[index]?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  }
 
   const marketStats = useMemo(
     () => [
@@ -351,35 +359,37 @@ export function HomeLandingExperience({
   );
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[var(--background)] text-[var(--text)]">
-      <section className="hero-scroll-stage">
-        <div className="sticky top-0 min-h-screen overflow-hidden border-b border-[var(--border)] bg-[var(--surface-soft)]">
-          <div className="hero-grid-bg absolute inset-0" />
-          <nav className="relative z-20 mx-auto flex max-w-7xl flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between lg:px-6">
-            <Link href="/" className="flex items-center gap-3 text-xl font-semibold tracking-tight">
-              <span className="grid size-9 place-items-center rounded-lg bg-[var(--brand)] text-sm font-bold text-[var(--surface)]">
-                TT
-              </span>
-              TeraTrace
+    <main className="min-h-screen bg-[var(--background)] text-[var(--text)] [--landing-header-height:140px] sm:[--landing-header-height:84px]">
+      <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--surface-soft)]/90 shadow-sm backdrop-blur-md">
+        <nav className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between lg:px-6">
+          <Link href="/" className="flex items-center gap-3 text-xl font-semibold tracking-tight">
+            <span className="grid size-9 place-items-center rounded-lg bg-[var(--brand)] text-sm font-bold text-[var(--surface)]">
+              TT
+            </span>
+            TeraTrace
+          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <ThemeToggle />
+            <Link
+              href="/login"
+              className="rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium text-[var(--text)] transition hover:border-[var(--brand)]"
+            >
+              Log in
             </Link>
-            <div className="flex flex-wrap items-center gap-3">
-              <ThemeToggle />
-              <Link
-                href="/login"
-                className="rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium text-[var(--text)] transition hover:border-[var(--brand)]"
-              >
-                Log in
-              </Link>
-              <Link
-                href="/signup"
-                className="rounded-full bg-[var(--brand)] px-5 py-2 text-sm font-semibold text-[var(--surface)] transition hover:bg-[var(--brand-hover)]"
-              >
-                Create account
-              </Link>
-            </div>
-          </nav>
+            <Link
+              href="/signup"
+              className="rounded-full bg-[var(--brand)] px-5 py-2 text-sm font-semibold text-[var(--surface)] transition hover:bg-[var(--brand-hover)]"
+            >
+              Create account
+            </Link>
+          </div>
+        </nav>
+      </header>
+      <section className="hero-scroll-stage">
+        <div className="hero-sticky sticky top-0 overflow-hidden border-b border-[var(--border)] bg-[var(--surface-soft)]">
+          <div className="hero-grid-bg absolute inset-0" />
 
-          <div className="relative z-10 mx-auto grid max-w-7xl gap-10 px-5 pb-12 pt-4 lg:min-h-[calc(100vh-92px)] lg:grid-cols-[0.86fr_1.14fr] lg:items-center lg:px-6">
+          <div className="hero-stage-content relative z-10 mx-auto grid max-w-7xl gap-10 px-5 pb-12 pt-4 lg:grid-cols-[0.86fr_1.14fr] lg:items-center lg:px-6">
             <div className="max-w-3xl">
               <p className="mb-5 inline-flex rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--brand-soft)] shadow-sm">
                 {active.eyebrow}
@@ -410,13 +420,14 @@ export function HomeLandingExperience({
                   <button
                     key={chapter.eyebrow}
                     type="button"
-                    onClick={() => setActiveChapter(index)}
+                    onClick={() => handleChapterClick(index)}
                     className={`chapter-tab rounded-lg border p-4 text-left ${
                       activeChapter === index
                         ? "border-[var(--brand)] bg-[var(--surface)]"
                         : "border-[var(--border)] bg-[var(--surface)]/70"
                     }`}
                     aria-pressed={activeChapter === index}
+                    aria-label={`Show chapter ${index + 1}: ${chapter.eyebrow}`}
                   >
                     <span className="block text-xs font-semibold text-[var(--brand-soft)]">
                       0{index + 1}
@@ -438,15 +449,15 @@ export function HomeLandingExperience({
           </div>
         </div>
 
-        <div className="hero-chapter-markers" aria-hidden="true">
+        <div className="hero-scroll-track" aria-hidden="true">
           {chapters.map((chapter, index) => (
             <div
               key={chapter.eyebrow}
               ref={(node) => {
-                markersRef.current[index] = node;
+                stepsRef.current[index] = node;
               }}
               data-chapter={index}
-              className="hero-chapter-marker"
+              className="hero-scroll-step"
             />
           ))}
         </div>
