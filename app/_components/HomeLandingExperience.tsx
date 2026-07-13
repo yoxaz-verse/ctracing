@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import type { HomepageProject, HomepageSummary } from "@/app/page";
 import { CarbonEstimator } from "@/app/_components/CarbonEstimator";
 import { ThemeToggle } from "@/app/_components/ThemeToggle";
@@ -13,28 +14,22 @@ type HomeLandingExperienceProps = {
 
 const chapters = [
   {
-    eyebrow: "Carbon credit marketplace foundation",
-    title: "Trusted visibility into carbon credit supply.",
-    body: "TeraTrace helps buyers, project developers, and operators see estimated supply, verification status, and purchase interest in one clean marketplace layer.",
-    proof: "Live supply, demand, and review signals in one operating surface.",
+    eyebrow: "For project sellers",
+    title: "Publish credible carbon credit supply.",
+    body: "Project developers can present methodology, location, available credits, price guidance, and verification progress in a structured marketplace view.",
+    proof: "Seller-ready supply records with clear project signals.",
   },
   {
-    eyebrow: "Live market intelligence",
-    title: "Real records, staged for faster diligence.",
-    body: "Listings move from raw project data into a structured console that sustainability teams can compare without losing methodology, status, or pricing context.",
-    proof: "Supabase-backed totals and latest project previews.",
+    eyebrow: "For credit buyers",
+    title: "Compare supply before making a move.",
+    body: "Sustainability teams can review live listings, compare regions and verification status, and record purchase interest before a transaction workflow begins.",
+    proof: "Buyer discovery with cleaner diligence context.",
   },
   {
-    eyebrow: "Role-aware workflows",
-    title: "A cleaner path for buyers, sellers, and operators.",
-    body: "Each workspace gets the right controls: sellers publish credible supply, buyers express demand, and admins keep marketplace quality visible.",
-    proof: "Three operating views without mixing permissions.",
-  },
-  {
-    eyebrow: "Verification and oversight",
-    title: "Professional enough for serious carbon decisions.",
-    body: "TeraTrace keeps claims, inventory, and market interest legible before transaction workflows begin, so teams can move with more confidence.",
-    proof: "Designed for high-value carbon credit discovery.",
+    eyebrow: "For carbon credit facilitators",
+    title: "Match buyers and sellers with confidence.",
+    body: "Carbon credit facilitators can identify credible supply, qualify buyer interest, and coordinate introductions that create value for both sides.",
+    proof: "Facilitator workflows for market connections.",
   },
 ];
 
@@ -52,10 +47,10 @@ const workflowSteps = [
       "Sustainability teams review live listings and record purchase interest before a transaction workflow begins.",
   },
   {
-    label: "Admin",
-    title: "Watch market health",
+    label: "Facilitator",
+    title: "Match credible opportunities",
     detail:
-      "Operators monitor inventory, users, verification coverage, and inquiry signals from a focused control layer.",
+      "Carbon credit facilitators qualify buyer interest, identify seller fit, and coordinate introductions that can turn into market opportunities.",
   },
 ];
 
@@ -74,17 +69,17 @@ const rolePanels = [
     title: "Turn project inventory into clear market signals.",
     items: [
       "Create structured listings for estimated carbon credit supply.",
-      "Submit project documentation for admin review.",
+      "Submit project documentation for verification review.",
       "Review demand signals tied to seller-owned projects.",
     ],
   },
   {
-    label: "For admins",
-    title: "Keep the marketplace measurable.",
+    label: "For facilitators",
+    title: "Turn market access into qualified introductions.",
     items: [
-      "Monitor buyers, sellers, listings, and interest volume.",
-      "Review marketplace coverage without changing public records.",
-      "Separate platform oversight from buyer and seller workflows.",
+      "Identify buyer demand and seller supply that fit each other.",
+      "Coordinate introductions with project, status, and volume context.",
+      "Build a benefit-driven pipeline from credible carbon credit matches.",
     ],
   },
 ];
@@ -112,6 +107,48 @@ function ConsoleMetric({ label, value }: { label: string; value: string }) {
   );
 }
 
+const carbonBubbles = [
+  { x: 8, y: 76, size: 9, delay: -0.8, duration: 12.5, drift: 56 },
+  { x: 18, y: 88, size: 5, delay: -6.4, duration: 11.2, drift: 42 },
+  { x: 29, y: 72, size: 7, delay: -3.1, duration: 13.8, drift: 68 },
+  { x: 41, y: 92, size: 4, delay: -8.3, duration: 10.6, drift: 50 },
+  { x: 54, y: 79, size: 8, delay: -1.7, duration: 14.4, drift: 74 },
+  { x: 66, y: 86, size: 6, delay: -5.2, duration: 12.1, drift: 46 },
+  { x: 78, y: 73, size: 10, delay: -9.6, duration: 15.2, drift: 62 },
+  { x: 89, y: 91, size: 5, delay: -2.6, duration: 11.7, drift: 58 },
+  { x: 12, y: 58, size: 4, delay: -10.8, duration: 13.1, drift: 36 },
+  { x: 35, y: 64, size: 6, delay: -4.7, duration: 12.8, drift: 54 },
+  { x: 61, y: 61, size: 4, delay: -7.5, duration: 10.9, drift: 44 },
+  { x: 83, y: 55, size: 7, delay: -12.2, duration: 14.9, drift: 64 },
+];
+
+function CarbonBubbleField({ variant = "panel" }: { variant?: "hero" | "panel" }) {
+  return (
+    <div
+      aria-hidden="true"
+      className={`carbon-bubble-field carbon-bubble-field--${variant}`}
+    >
+      <div className="carbon-bubble-capture" />
+      {carbonBubbles.map((bubble) => (
+        <span
+          key={`${bubble.x}-${bubble.y}-${bubble.size}`}
+          className="carbon-bubble"
+          style={
+            {
+              "--bubble-x": `${bubble.x}%`,
+              "--bubble-y": `${bubble.y}%`,
+              "--bubble-size": `${bubble.size}px`,
+              "--bubble-delay": `${bubble.delay}s`,
+              "--bubble-duration": `${bubble.duration}s`,
+              "--bubble-drift": `${bubble.drift}px`,
+            } as CSSProperties
+          }
+        />
+      ))}
+    </div>
+  );
+}
+
 function SupplyConsole({
   summary,
   projects,
@@ -123,12 +160,11 @@ function SupplyConsole({
   hasProjects: boolean;
   activeChapter: number;
 }) {
-  const workflowActive = activeChapter >= 2;
-  const oversightActive = activeChapter >= 3;
-
   return (
-    <div className="hero-console rounded-[1.75rem] border border-white/12 bg-[var(--panel-dark)] p-3 text-white shadow-[0_34px_120px_rgba(16,32,22,0.34)]">
-      <div className="overflow-hidden rounded-[1.25rem] border border-white/10 bg-[#101711]">
+    <div className="hero-console relative isolate rounded-[1.75rem] border border-white/12 bg-[var(--panel-dark)] p-3 text-white shadow-[0_34px_120px_rgba(16,32,22,0.34)]">
+      <div className="relative isolate overflow-hidden rounded-[1.25rem] border border-white/10 bg-[#101711]">
+        <CarbonBubbleField />
+        <div className="relative z-10">
         <div className="border-b border-white/10 bg-white/[0.035] p-5 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
@@ -195,7 +231,7 @@ function SupplyConsole({
             <div
               key={step.label}
               className={`rounded-2xl border p-4 transition ${
-                workflowActive && index <= activeChapter - 1
+                activeChapter === index
                   ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-foreground)]"
                   : "border-white/10 bg-white/[0.04] text-white/68"
               }`}
@@ -209,11 +245,9 @@ function SupplyConsole({
         </div>
 
         <div
-          className={`hero-oversight grid gap-3 border-t border-white/10 p-5 sm:grid-cols-3 sm:p-6 ${
-            oversightActive ? "is-visible" : ""
-          }`}
+          className="hero-market-signals is-visible grid gap-3 border-t border-white/10 p-5 sm:grid-cols-3 sm:p-6"
         >
-          {["Verification review", "Demand signals", "Operator audit"].map((item) => (
+          {["Verification review", "Demand signals", "Match pipeline"].map((item) => (
             <div
               key={item}
               className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.055] px-3 py-2 text-sm"
@@ -222,6 +256,7 @@ function SupplyConsole({
               <span className="font-semibold text-[var(--accent)]">Ready</span>
             </div>
           ))}
+        </div>
         </div>
       </div>
     </div>
@@ -443,6 +478,7 @@ export function HomeLandingExperience({
       <section className="hero-scroll-stage">
         <div className="hero-sticky sticky top-0 overflow-hidden border-b border-[var(--border)] bg-[var(--surface-soft)]">
           <div className="hero-grid-bg absolute inset-0" />
+          <CarbonBubbleField variant="hero" />
 
           <div className="hero-stage-content relative z-10 mx-auto grid max-w-7xl gap-10 px-5 pb-12 pt-4 lg:grid-cols-[0.86fr_1.14fr] lg:items-center lg:px-6">
             <div className="max-w-3xl">
@@ -536,7 +572,7 @@ export function HomeLandingExperience({
             ) : (
               <p className="text-sm leading-6 text-[var(--text-muted)]">
                 Updated directly from seller project listings, then structured
-                for high-signal review by buyers and operators.
+                for high-signal review by buyers and facilitators.
               </p>
             )}
           </div>
@@ -584,7 +620,7 @@ export function HomeLandingExperience({
                 How it works
               </p>
               <h2 className="mt-3 text-4xl font-semibold tracking-tight text-[var(--text-heading)]">
-                One operating layer for supply, demand, and oversight.
+                One operating layer for sellers, buyers, and facilitators.
               </h2>
             </div>
             <div className="grid gap-4 lg:grid-cols-3">
@@ -686,7 +722,9 @@ export function HomeLandingExperience({
           )}
         </div>
 
-        <aside className="rounded-xl bg-[var(--panel-dark)] p-6 text-white md:p-8">
+        <aside className="relative isolate overflow-hidden rounded-xl bg-[var(--panel-dark)] p-6 text-white md:p-8">
+          <CarbonBubbleField />
+          <div className="relative z-10">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">
             Create a workspace
           </p>
@@ -694,11 +732,11 @@ export function HomeLandingExperience({
             Build a cleaner carbon supply record from day one.
           </h2>
           <p className="mt-4 text-sm leading-6 text-white/65">
-            Start with structured listings, buyer interest, and admin
-            visibility before introducing transaction workflows.
+            Start with structured listings, buyer interest, and facilitator
+            matching before introducing transaction workflows.
           </p>
           <div className="mt-8 space-y-3">
-            {["Buyer discovery", "Seller listings", "Admin oversight"].map((item) => (
+            {["Buyer discovery", "Seller listings", "Facilitator matching"].map((item) => (
               <div
                 key={item}
                 className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.06] px-4 py-3 text-sm"
@@ -714,6 +752,7 @@ export function HomeLandingExperience({
           >
             Create account
           </Link>
+          </div>
         </aside>
       </section>
     </main>

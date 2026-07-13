@@ -173,6 +173,23 @@ function Field({
   );
 }
 
+function DisclaimerCard({ result }: { result: EstimatorResult }) {
+  return (
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
+      <h3 className="font-semibold text-[var(--text-heading)]">Disclaimers</h3>
+      <div className="mt-3 space-y-2 text-xs leading-5 text-[var(--text-muted)]">
+        <p className="font-semibold text-[var(--danger-text)]">{result.disclaimerText}</p>
+        {additionalDisclaimers.map((item) => (
+          <p key={item}>{item}</p>
+        ))}
+        {result.warnings.map((item) => (
+          <p key={item}>{item}</p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function SelectField({
   label,
   value,
@@ -944,6 +961,8 @@ export function CarbonEstimator({
               )}
             </div>
           ) : null}
+
+          <DisclaimerCard result={result} />
         </div>
 
         <aside className="space-y-4">
@@ -975,19 +994,6 @@ export function CarbonEstimator({
                     <p className="mt-2 text-xs font-semibold text-[var(--brand-soft)]">Default assumption used</p>
                   ) : null}
                 </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-            <h3 className="font-semibold text-[var(--text-heading)]">Disclaimers</h3>
-            <div className="mt-3 space-y-2 text-xs leading-5 text-[var(--text-muted)]">
-              <p className="font-semibold text-[var(--danger-text)]">{result.disclaimerText}</p>
-              {additionalDisclaimers.map((item) => (
-                <p key={item}>{item}</p>
-              ))}
-              {result.warnings.map((item) => (
-                <p key={item}>{item}</p>
               ))}
             </div>
           </div>

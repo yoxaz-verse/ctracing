@@ -160,6 +160,67 @@ textarea {
   mask-image: linear-gradient(to bottom, black 0%, black 72%, transparent 100%);
 }
 
+.carbon-bubble-field {
+  --bubble-rise: -84%;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.2;
+  mix-blend-mode: screen;
+  contain: layout paint;
+}
+
+.carbon-bubble-field--hero {
+  inset: 0;
+  opacity: 0;
+}
+
+:root[data-theme="dark"] .carbon-bubble-field--hero {
+  opacity: 0.22;
+}
+
+.carbon-bubble-field--panel {
+  --bubble-rise: -118%;
+  opacity: 0.26;
+}
+
+.carbon-bubble-capture {
+  position: absolute;
+  top: 14%;
+  right: 12%;
+  width: 4.5rem;
+  height: 4.5rem;
+  border: 1px solid rgba(215, 249, 111, 0.16);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(215, 249, 111, 0.13), transparent 56%),
+    radial-gradient(circle, rgba(139, 208, 155, 0.09), transparent 68%);
+  box-shadow: 0 0 38px rgba(215, 249, 111, 0.09);
+  opacity: 0.68;
+}
+
+.carbon-bubble {
+  position: absolute;
+  left: var(--bubble-x);
+  top: var(--bubble-y);
+  width: var(--bubble-size);
+  height: var(--bubble-size);
+  border: 1px solid rgba(215, 249, 111, 0.52);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.72), transparent 18%),
+    radial-gradient(circle, rgba(215, 249, 111, 0.18), transparent 62%);
+  box-shadow:
+    0 0 0 2px rgba(215, 249, 111, 0.08),
+    0 0 18px rgba(139, 208, 155, 0.16);
+  opacity: 0;
+  transform: translate3d(0, 0, 0) scale(0.8);
+  animation: carbon-bubble-capture var(--bubble-duration) ease-in-out infinite;
+  animation-delay: var(--bubble-delay);
+}
+
 .hero-title {
   text-wrap: balance;
 }
@@ -207,7 +268,7 @@ textarea {
   background-color: rgba(255, 255, 255, 0.082);
 }
 
-.hero-oversight {
+.hero-market-signals {
   opacity: 0.56;
   transform: translateY(8px);
   transition:
@@ -215,7 +276,7 @@ textarea {
     transform 420ms ease;
 }
 
-.hero-oversight.is-visible {
+.hero-market-signals.is-visible {
   opacity: 1;
   transform: translateY(0);
 }
@@ -554,6 +615,31 @@ textarea::placeholder {
   }
 }
 
+@keyframes carbon-bubble-capture {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0.72);
+  }
+  16% {
+    opacity: 0.42;
+  }
+  68% {
+    opacity: 0.3;
+    transform: translate3d(calc(var(--bubble-drift) * 0.74), calc(var(--bubble-rise) * 0.74), 0)
+      scale(0.78);
+  }
+  86% {
+    opacity: 0.2;
+    transform: translate3d(calc(var(--bubble-drift) * 0.92), calc(var(--bubble-rise) * 0.92), 0)
+      scale(0.42);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--bubble-drift), var(--bubble-rise), 0)
+      scale(0.18);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -567,8 +653,8 @@ textarea::placeholder {
   .hero-copy-panel.is-visible,
   .hero-project-row,
   .hero-project-row.is-lit,
-  .hero-oversight,
-  .hero-oversight.is-visible,
+  .hero-market-signals,
+  .hero-market-signals.is-visible,
   .chapter-tab,
   .chapter-tab:hover {
     transform: none;
@@ -579,7 +665,12 @@ textarea::placeholder {
   .carbon-loader__orbit,
   .carbon-loader__leaf,
   .carbon-loader__pulse,
-  .carbon-flow__line::after {
+  .carbon-flow__line::after,
+  .carbon-bubble {
     animation: none;
+  }
+
+  .carbon-bubble-field {
+    display: none;
   }
 }
