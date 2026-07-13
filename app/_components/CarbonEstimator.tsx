@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   additionalDisclaimers,
   defaultFactors,
@@ -186,15 +186,173 @@ function SelectField({
   options: string[];
   wide?: boolean;
 }) {
+  const id = useId();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(() =>
+    Math.max(0, options.indexOf(value)),
+  );
+  const selectedIndex = Math.max(0, options.indexOf(value));
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    function handlePointerDown(event: PointerEvent) {
+      if (
+        rootRef.current &&
+        !rootRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpen(false);
+        buttonRef.current?.focus();
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  function chooseOption(option: string) {
+    onChange(option);
+    setOpen(false);
+    buttonRef.current?.focus();
+  }
+
+  function handleButtonKeyDown(event: React.KeyboardEvent<HTMLButtonElement>) {
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      const direction = event.key === "ArrowDown" ? 1 : -1;
+      setOpen(true);
+      setActiveIndex((current) =>
+        (current + direction + options.length) % options.length,
+      );
+    }
+
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      if (open) {
+        chooseOption(options[activeIndex] ?? value);
+      } else {
+        setOpen(true);
+      }
+    }
+  }
+
+  function toggleOpen() {
+    setOpen((current) => {
+      if (!current) {
+        setActiveIndex(selectedIndex);
+      }
+
+      return !current;
+    });
+  }
+
   return (
     <Field label={label} wide={wide}>
-      <select value={value} onChange={(event) => onChange(event.target.value)} className={inputClass}>
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
+      <div ref={rootRef} className="relative mt-2">
+        <button
+          ref={buttonRef}
+          type="button"
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          aria-controls={`${id}-listbox`}
+          onClick={toggleOpen}
+          onKeyDown={handleButtonKeyDown}
+          className={`group flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl border bg-[var(--surface)] px-4 py-3 text-left text-sm outline-none shadow-sm ${
+            open
+              ? "border-[var(--brand)] ring-4 ring-[color-mix(in_srgb,var(--brand)_18%,transparent)]"
+              : "border-[var(--border)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-subtle)]"
+          } focus-visible:border-[var(--brand)] focus-visible:ring-4 focus-visible:ring-[color-mix(in_srgb,var(--brand)_18%,transparent)]`}
+        >
+          <span className="min-w-0 truncate font-semibold text-[var(--text-heading)]">
+            {value}
+          </span>
+          <span
+            aria-hidden="true"
+            className={`grid size-8 shrink-0 place-items-center rounded-full border border-[var(--border)] bg-[var(--surface-subtle)] text-[var(--brand-soft)] transition ${
+              open ? "rotate-180 border-[var(--brand)] text-[var(--brand)]" : ""
+            }`}
+          >
+            <svg
+              viewBox="0 0 20 20"
+              fill="none"
+              className="size-4"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M5 8l5 5 5-5" />
+            </svg>
+          </span>
+        </button>
+
+        {open ? (
+          <div
+            id={`${id}-listbox`}
+            role="listbox"
+            tabIndex={-1}
+            className="absolute left-0 right-0 z-50 mt-2 max-h-72 overflow-auto rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-2 shadow-[0_20px_70px_rgba(0,0,0,0.22)]"
+          >
+            {options.map((option, index) => {
+              const selected = option === value;
+              const active = index === activeIndex;
+
+              return (
+                <button
+                  key={option}
+                  id={`${id}-option-${index}`}
+                  type="button"
+                  role="option"
+                  aria-selected={selected}
+                  onMouseEnter={() => setActiveIndex(index)}
+                  onClick={() => chooseOption(option)}
+                  className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition ${
+                    selected
+                      ? "bg-[var(--brand)] font-semibold text-[var(--surface)]"
+                      : active
+                        ? "bg-[var(--surface-positive)] text-[var(--text-heading)]"
+                        : "text-[var(--text-label)] hover:bg-[var(--surface-subtle)]"
+                  }`}
+                >
+                  <span className="min-w-0 truncate">{option}</span>
+                  {selected ? (
+                    <span
+                      aria-hidden="true"
+                      className="grid size-5 shrink-0 place-items-center rounded-full bg-[color-mix(in_srgb,var(--surface)_20%,transparent)]"
+                    >
+                      <svg
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        className="size-3.5"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M4 10.5l4 4 8-9" />
+                      </svg>
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
+      </div>
     </Field>
   );
 }

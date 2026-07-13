@@ -127,6 +127,105 @@ textarea {
   outline-offset: 3px;
 }
 
+.hero-scroll-stage {
+  position: relative;
+  min-height: 420vh;
+}
+
+.hero-grid-bg {
+  pointer-events: none;
+  background-image:
+    linear-gradient(
+      color-mix(in srgb, var(--border) 48%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--border) 48%, transparent) 1px,
+      transparent 1px
+    );
+  background-position: center top;
+  background-size: 48px 48px;
+  mask-image: linear-gradient(to bottom, black 0%, black 72%, transparent 100%);
+}
+
+.hero-title {
+  text-wrap: balance;
+}
+
+.hero-console {
+  transform: translateY(0) scale(1);
+  transition:
+    transform 520ms ease,
+    box-shadow 520ms ease;
+}
+
+.hero-console:hover {
+  transform: translateY(-3px) scale(1.004);
+}
+
+.hero-project-row {
+  opacity: 0.72;
+  transform: translateY(8px);
+  transition:
+    opacity 420ms ease,
+    transform 420ms ease,
+    border-color 420ms ease,
+    background-color 420ms ease;
+}
+
+.hero-project-row.is-lit {
+  opacity: 1;
+  transform: translateY(0);
+  border-color: color-mix(in srgb, var(--accent) 34%, transparent);
+  background-color: rgba(255, 255, 255, 0.082);
+}
+
+.hero-oversight {
+  opacity: 0.56;
+  transform: translateY(8px);
+  transition:
+    opacity 420ms ease,
+    transform 420ms ease;
+}
+
+.hero-oversight.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.chapter-tab {
+  min-height: 7.25rem;
+  cursor: pointer;
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    background-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.chapter-tab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 40px rgba(26, 45, 33, 0.1);
+}
+
+.chapter-tab:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 70%, white);
+  outline-offset: 3px;
+}
+
+.hero-chapter-markers {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: repeat(4, 1fr);
+  pointer-events: none;
+}
+
+.hero-chapter-marker {
+  min-height: 100vh;
+}
+
 .bg-\[\#f5f7f3\] {
   background-color: var(--background);
 }
@@ -372,6 +471,24 @@ textarea::placeholder {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+
+  .hero-console,
+  .hero-console:hover,
+  .hero-project-row,
+  .hero-project-row.is-lit,
+  .hero-oversight,
+  .hero-oversight.is-visible,
+  .chapter-tab,
+  .chapter-tab:hover {
+    transform: none;
+    transition: none;
+  }
+
   .loading-shimmer,
   .carbon-loader__orbit,
   .carbon-loader__leaf,
