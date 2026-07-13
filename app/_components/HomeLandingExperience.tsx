@@ -293,43 +293,98 @@ export function HomeLandingExperience({
   unavailable,
 }: HomeLandingExperienceProps) {
   const [activeChapter, setActiveChapter] = useState(0);
+  const [displayChapter, setDisplayChapter] = useState(0);
+  const [copyVisible, setCopyVisible] = useState(true);
   const stepsRef = useRef<Array<HTMLDivElement | null>>([]);
+  const scrollTargetRef = useRef<number | null>(null);
+  const scrollLockUntilRef = useRef(0);
   const projects = summary.latest_projects;
   const hasProjects = projects.length > 0;
-  const active = chapters[activeChapter] ?? chapters[0];
+  const active = chapters[displayChapter] ?? chapters[0];
 
   useEffect(() => {
-    const steps = stepsRef.current.filter(Boolean) as HTMLDivElement[];
-    if (!steps.length) {
+    let frame = 0;
+
+    function updateActiveChapter() {
+      frame = 0;
+
+      if (
+        scrollTargetRef.current !== null &&
+        window.performance.now() < scrollLockUntilRef.current
+      ) {
+        setActiveChapter(scrollTargetRef.current);
+        return;
+      }
+
+      scrollTargetRef.current = null;
+      const steps = stepsRef.current.filter(Boolean) as HTMLDivElement[];
+      if (!steps.length) {
+        return;
+      }
+
+      const targetLine = window.innerHeight * 0.52;
+      const best = steps.reduce(
+        (current, step, index) => {
+          const rect = step.getBoundingClientRect();
+          const center = rect.top + rect.height / 2;
+          const distance = Math.abs(center - targetLine);
+
+          return distance < current.distance ? { index, distance } : current;
+        },
+        { index: 0, distance: Number.POSITIVE_INFINITY },
+      );
+
+      setActiveChapter((current) => (current === best.index ? current : best.index));
+    }
+
+    function requestUpdate() {
+      if (frame === 0) {
+        frame = window.requestAnimationFrame(updateActiveChapter);
+      }
+    }
+
+    updateActiveChapter();
+    window.addEventListener("scroll", requestUpdate, { passive: true });
+    window.addEventListener("resize", requestUpdate);
+
+    return () => {
+      if (frame !== 0) {
+        window.cancelAnimationFrame(frame);
+      }
+      window.removeEventListener("scroll", requestUpdate);
+      window.removeEventListener("resize", requestUpdate);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (displayChapter === activeChapter) {
       return;
     }
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const best = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        const index = best?.target.getAttribute("data-chapter");
-        if (index !== undefined && index !== null) {
-          setActiveChapter(Number(index));
-        }
-      },
-      {
-        rootMargin: "-38% 0px -38% 0px",
-        threshold: [0, 0.35, 0.6, 0.85],
-      },
-    );
+    const hideTimer = window.setTimeout(() => setCopyVisible(false), 0);
+    const swapTimer = window.setTimeout(() => {
+      setDisplayChapter(activeChapter);
+      window.requestAnimationFrame(() => setCopyVisible(true));
+    }, 140);
 
-    steps.forEach((step) => observer.observe(step));
-    return () => observer.disconnect();
-  }, []);
+    return () => {
+      window.clearTimeout(hideTimer);
+      window.clearTimeout(swapTimer);
+    };
+  }, [activeChapter, displayChapter]);
 
   function handleChapterClick(index: number) {
+    scrollTargetRef.current = index;
+    scrollLockUntilRef.current = window.performance.now() + 700;
     setActiveChapter(index);
-    stepsRef.current[index]?.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
-    });
+
+    const target = stepsRef.current[index];
+    if (target) {
+      target.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
   }
 
   const marketStats = useMemo(
@@ -391,15 +446,19 @@ export function HomeLandingExperience({
 
           <div className="hero-stage-content relative z-10 mx-auto grid max-w-7xl gap-10 px-5 pb-12 pt-4 lg:grid-cols-[0.86fr_1.14fr] lg:items-center lg:px-6">
             <div className="max-w-3xl">
-              <p className="mb-5 inline-flex rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--brand-soft)] shadow-sm">
-                {active.eyebrow}
-              </p>
-              <h1 className="hero-title max-w-4xl text-5xl font-semibold leading-[1.01] tracking-tight text-[var(--text-heading)] md:text-6xl xl:text-7xl">
-                {active.title}
-              </h1>
-              <p className="mt-6 max-w-2xl text-lg leading-8 text-[var(--text-muted)]">
-                {active.body}
-              </p>
+              <div className={`hero-copy-panel ${copyVisible ? "is-visible" : ""}`}>
+                <p className="mb-5 inline-flex rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--brand-soft)] shadow-sm">
+                  {active.eyebrow}
+                </p>
+                <h1
+                  className="hero-title max-w-4xl text-5xl font-semibold leading-[1.01] tracking-tight text-[var(--text-heading)] md:text-6xl xl:text-7xl"
+                >
+                  {active.title}
+                </h1>
+                <p className="mt-6 max-w-2xl text-lg leading-8 text-[var(--text-muted)]">
+                  {active.body}
+                </p>
+              </div>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link
                   href="/signup"
@@ -415,26 +474,21 @@ export function HomeLandingExperience({
                 </Link>
               </div>
 
-              <div className="mt-10 grid max-w-2xl gap-3 sm:grid-cols-4">
+              <div className="chapter-progress mt-9 flex max-w-xl gap-2" aria-label="Homepage story chapters">
                 {chapters.map((chapter, index) => (
                   <button
                     key={chapter.eyebrow}
                     type="button"
                     onClick={() => handleChapterClick(index)}
-                    className={`chapter-tab rounded-lg border p-4 text-left ${
+                    className={`chapter-tab flex-1 rounded-full border px-3 py-2 text-center text-xs font-semibold ${
                       activeChapter === index
-                        ? "border-[var(--brand)] bg-[var(--surface)]"
-                        : "border-[var(--border)] bg-[var(--surface)]/70"
+                        ? "border-[var(--brand)] bg-[var(--surface)] text-[var(--brand)]"
+                        : "border-[var(--border)] bg-[var(--surface)]/70 text-[var(--text-muted)]"
                     }`}
                     aria-pressed={activeChapter === index}
                     aria-label={`Show chapter ${index + 1}: ${chapter.eyebrow}`}
                   >
-                    <span className="block text-xs font-semibold text-[var(--brand-soft)]">
-                      0{index + 1}
-                    </span>
-                    <span className="mt-2 block text-sm font-semibold text-[var(--text-heading)]">
-                      {chapter.proof}
-                    </span>
+                    <span className="block">0{index + 1}</span>
                   </button>
                 ))}
               </div>
