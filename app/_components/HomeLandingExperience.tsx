@@ -14,6 +14,12 @@ type HomeLandingExperienceProps = {
 
 const chapters = [
   {
+    eyebrow: "Carbon credit marketplace",
+    title: "Trusted visibility into carbon credit supply.",
+    body: "TeraTrace helps buyers, project sellers, and facilitators understand live carbon credit supply, demand signals, and verification context from one clean marketplace layer.",
+    proof: "Clear marketplace context before role-specific workflows begin.",
+  },
+  {
     eyebrow: "For project sellers",
     title: "Publish credible carbon credit supply.",
     body: "Project developers can present methodology, location, available credits, price guidance, and verification progress in a structured marketplace view.",
@@ -160,8 +166,10 @@ function SupplyConsole({
   hasProjects: boolean;
   activeChapter: number;
 }) {
+  const activeWorkflowStep = Math.max(0, activeChapter - 1);
+
   return (
-    <div className="hero-console relative isolate rounded-[1.75rem] border border-white/12 bg-[var(--panel-dark)] p-3 text-white shadow-[0_34px_120px_rgba(16,32,22,0.34)]">
+    <div className="hero-console hero-console--visible relative isolate rounded-[1.75rem] border border-white/12 bg-[var(--panel-dark)] p-3 text-white shadow-[0_34px_120px_rgba(16,32,22,0.34)]">
       <div className="relative isolate overflow-hidden rounded-[1.25rem] border border-white/10 bg-[#101711]">
         <CarbonBubbleField />
         <div className="relative z-10">
@@ -231,7 +239,7 @@ function SupplyConsole({
             <div
               key={step.label}
               className={`rounded-2xl border p-4 transition ${
-                activeChapter === index
+                activeWorkflowStep === index
                   ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-foreground)]"
                   : "border-white/10 bg-white/[0.04] text-white/68"
               }`}
@@ -336,6 +344,7 @@ export function HomeLandingExperience({
   const projects = summary.latest_projects;
   const hasProjects = projects.length > 0;
   const active = chapters[displayChapter] ?? chapters[0];
+  const showConsole = activeChapter > 0;
 
   useEffect(() => {
     let frame = 0;
@@ -480,7 +489,13 @@ export function HomeLandingExperience({
           <div className="hero-grid-bg absolute inset-0" />
           <CarbonBubbleField variant="hero" />
 
-          <div className="hero-stage-content relative z-10 mx-auto grid max-w-7xl gap-10 px-5 pb-12 pt-4 lg:grid-cols-[0.86fr_1.14fr] lg:items-center lg:px-6">
+          <div
+            className={`hero-stage-content ${
+              showConsole
+                ? "hero-stage-content--with-console"
+                : "hero-stage-content--intro"
+            } relative z-10 mx-auto grid max-w-7xl gap-10 px-5 pb-12 pt-4 lg:items-center lg:px-6`}
+          >
             <div className="max-w-3xl">
               <div className={`hero-copy-panel ${copyVisible ? "is-visible" : ""}`}>
                 <p className="mb-5 inline-flex rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--brand-soft)] shadow-sm">
@@ -530,12 +545,14 @@ export function HomeLandingExperience({
               </div>
             </div>
 
-            <SupplyConsole
-              summary={summary}
-              projects={projects}
-              hasProjects={hasProjects}
-              activeChapter={activeChapter}
-            />
+            {showConsole ? (
+              <SupplyConsole
+                summary={summary}
+                projects={projects}
+                hasProjects={hasProjects}
+                activeChapter={activeChapter}
+              />
+            ) : null}
           </div>
         </div>
 
