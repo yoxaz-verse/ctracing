@@ -132,6 +132,22 @@ textarea {
   background: var(--surface-soft);
 }
 
+.landing-header {
+  min-height: var(--landing-header-height);
+}
+
+.landing-nav {
+  min-height: var(--landing-header-height);
+}
+
+.landing-brand,
+.landing-actions,
+.landing-action,
+.hero-cta,
+.chapter-tab {
+  flex-shrink: 0;
+}
+
 .hero-sticky {
   top: var(--landing-header-height);
   height: calc(100svh - var(--landing-header-height));
@@ -161,12 +177,21 @@ textarea {
   pointer-events: none;
   overflow: hidden;
   background:
+    radial-gradient(circle at 18% 76%, color-mix(in srgb, var(--brand) 12%, transparent) 0 16%, transparent 34%),
+    radial-gradient(circle at 76% 24%, rgba(215, 249, 111, 0.12) 0 8%, transparent 24%),
+    radial-gradient(circle at 54% 82%, rgba(139, 208, 155, 0.08) 0 7%, transparent 24%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.52), transparent 38%),
+    var(--surface-soft);
+  mask-image: linear-gradient(to bottom, black 0%, black 72%, transparent 100%);
+}
+
+:root[data-theme="dark"] .hero-eco-bg {
+  background:
     radial-gradient(circle at 20% 72%, color-mix(in srgb, var(--brand) 18%, transparent) 0 18%, transparent 36%),
     radial-gradient(circle at 74% 26%, rgba(215, 249, 111, 0.09) 0 10%, transparent 28%),
     radial-gradient(circle at 54% 82%, rgba(139, 208, 155, 0.1) 0 8%, transparent 26%),
     linear-gradient(135deg, rgba(139, 208, 155, 0.09), transparent 34%),
     var(--surface-soft);
-  mask-image: linear-gradient(to bottom, black 0%, black 72%, transparent 100%);
 }
 
 .hero-eco-bg::before,
@@ -183,10 +208,10 @@ textarea {
   width: min(34vw, 28rem);
   height: min(34vw, 28rem);
   background:
-    radial-gradient(circle, rgba(215, 249, 111, 0.1), transparent 58%),
-    radial-gradient(circle, rgba(139, 208, 155, 0.1), transparent 70%);
+    radial-gradient(circle, rgba(215, 249, 111, 0.12), transparent 58%),
+    radial-gradient(circle, rgba(139, 208, 155, 0.08), transparent 70%);
   filter: blur(10px);
-  opacity: 0.72;
+  opacity: 0.52;
 }
 
 .hero-eco-bg::after {
@@ -195,10 +220,10 @@ textarea {
   width: min(44vw, 34rem);
   height: min(44vw, 34rem);
   background:
-    radial-gradient(circle, color-mix(in srgb, var(--brand) 20%, transparent), transparent 58%),
-    radial-gradient(circle, rgba(215, 249, 111, 0.08), transparent 72%);
+    radial-gradient(circle, color-mix(in srgb, var(--brand) 14%, transparent), transparent 58%),
+    radial-gradient(circle, rgba(215, 249, 111, 0.06), transparent 72%);
   filter: blur(14px);
-  opacity: 0.66;
+  opacity: 0.5;
 }
 
 .hero-eco-bg__canopy,
@@ -331,100 +356,317 @@ textarea {
   z-index: 2;
   pointer-events: none;
   opacity: 0;
-  transform: translate3d(1.5rem, 0, 0);
   transition:
-    opacity 520ms cubic-bezier(0.22, 1, 0.36, 1),
-    transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 520ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .hero-first-motion.is-visible {
   opacity: 1;
-  transform: translate3d(0, 0, 0);
 }
 
-.hero-signal-panel {
+.hero-forest-estimator {
   position: absolute;
-  right: clamp(1.5rem, 8vw, 7rem);
-  top: 48%;
-  width: clamp(13rem, 24vw, 22rem);
-  aspect-ratio: 1;
+  right: clamp(1.25rem, 7vw, 6rem);
+  top: 50%;
+  width: clamp(18rem, 30vw, 28rem);
   transform: translateY(-50%);
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--brand) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brand) 22%, var(--border));
+  border-radius: 1.5rem;
   background:
-    conic-gradient(from 220deg, transparent 0 64%, color-mix(in srgb, var(--accent) 24%, transparent) 70%, transparent 78%),
-    radial-gradient(circle, color-mix(in srgb, var(--brand) 8%, transparent), transparent 62%);
+    linear-gradient(145deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.62)),
+    radial-gradient(circle at 22% 16%, rgba(215, 249, 111, 0.28), transparent 30%),
+    radial-gradient(circle at 82% 18%, color-mix(in srgb, var(--brand) 14%, transparent), transparent 34%);
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--surface) 68%, transparent),
-    0 22px 72px color-mix(in srgb, var(--brand) 12%, transparent);
+    inset 0 1px 0 rgba(255, 255, 255, 0.78),
+    0 28px 90px color-mix(in srgb, var(--brand) 18%, transparent);
   overflow: hidden;
 }
 
-.hero-signal-panel__ring,
-.hero-signal-panel__sweep,
-.hero-signal-panel__node {
+.hero-forest-estimator::before {
+  content: "";
+  position: absolute;
+  inset: 1rem;
+  border: 1px solid color-mix(in srgb, var(--brand) 9%, transparent);
+  border-radius: 1rem;
+  pointer-events: none;
+}
+
+.hero-forest-estimator__header,
+.hero-forest-estimator__land,
+.hero-forest-estimator__flow,
+.hero-forest-estimator__metrics {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-forest-estimator__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.25rem 0;
+}
+
+.hero-forest-estimator__header span,
+.hero-forest-estimator__metrics span {
+  color: var(--brand-soft);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hero-forest-estimator__header strong {
+  max-width: 10rem;
+  color: var(--text-heading);
+  font-size: 1.05rem;
+  line-height: 1.18;
+  text-align: right;
+}
+
+.hero-forest-estimator__land {
+  height: clamp(12rem, 21vw, 17rem);
+  margin: 1rem 1.25rem 0;
+  border: 1px solid color-mix(in srgb, var(--brand) 16%, var(--border));
+  border-radius: 1rem;
+  background:
+    linear-gradient(112deg, transparent 0 42%, rgba(255, 255, 255, 0.52) 43% 46%, transparent 47%),
+    linear-gradient(24deg, color-mix(in srgb, var(--brand) 17%, transparent), transparent 42%),
+    radial-gradient(circle at 72% 18%, rgba(215, 249, 111, 0.38), transparent 20%),
+    linear-gradient(160deg, #eef6e9 0%, #d9ead2 48%, #c4ddbd 100%);
+  box-shadow: inset 0 0 42px rgba(33, 77, 53, 0.08);
+  overflow: hidden;
+}
+
+:root[data-theme="dark"] .hero-forest-estimator {
+  border-color: color-mix(in srgb, var(--brand) 28%, transparent);
+  background:
+    linear-gradient(145deg, rgba(24, 33, 27, 0.94), rgba(12, 18, 14, 0.86)),
+    radial-gradient(circle at 22% 16%, rgba(215, 249, 111, 0.16), transparent 30%),
+    radial-gradient(circle at 82% 18%, rgba(139, 208, 155, 0.14), transparent 34%);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.32);
+}
+
+:root[data-theme="dark"] .hero-forest-estimator__land {
+  border-color: rgba(139, 208, 155, 0.22);
+  background:
+    linear-gradient(112deg, transparent 0 42%, rgba(255, 255, 255, 0.08) 43% 46%, transparent 47%),
+    linear-gradient(24deg, rgba(139, 208, 155, 0.15), transparent 42%),
+    radial-gradient(circle at 72% 18%, rgba(215, 249, 111, 0.18), transparent 20%),
+    linear-gradient(160deg, #15251a 0%, #1f3926 48%, #2c4a31 100%);
+  box-shadow: inset 0 0 42px rgba(0, 0, 0, 0.18);
+}
+
+.hero-forest-estimator__parcel,
+.hero-forest-estimator__stream,
+.hero-forest-estimator__tree,
+.hero-forest-estimator__marker,
+.hero-forest-estimator__flow span {
   position: absolute;
   display: block;
   pointer-events: none;
 }
 
-.hero-signal-panel__ring {
-  inset: var(--ring-inset);
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--brand) 16%, transparent);
-  animation: hero-signal-pulse 2.8s ease-in-out infinite;
+.hero-forest-estimator__parcel {
+  left: 10%;
+  right: 12%;
+  bottom: 13%;
+  height: 52%;
+  border: 1px dashed rgba(33, 77, 53, 0.3);
+  border-radius: 52% 48% 46% 54%;
+  transform: rotate(-7deg);
 }
 
-.hero-signal-panel__ring--outer {
-  --ring-inset: 11%;
+.hero-forest-estimator__stream {
+  left: 8%;
+  right: 8%;
+  bottom: 25%;
+  height: 24%;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.72);
+  border-radius: 50%;
+  transform: rotate(-12deg);
 }
 
-.hero-signal-panel__ring--middle {
-  --ring-inset: 27%;
-  animation-delay: 260ms;
-}
-
-.hero-signal-panel__ring--inner {
-  --ring-inset: 43%;
-  animation-delay: 520ms;
-}
-
-.hero-signal-panel__sweep {
-  inset: 9%;
-  border-radius: 999px;
-  background: conic-gradient(from 0deg, transparent 0 76%, rgba(215, 249, 111, 0.38) 84%, transparent 92%);
-  mask-image: radial-gradient(circle, transparent 0 18%, black 19% 100%);
-  opacity: 0.68;
-  animation: hero-signal-sweep 5.6s linear infinite;
-}
-
-.hero-signal-panel__node {
-  width: 0.78rem;
-  height: 0.78rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  background: var(--accent);
+.hero-forest-estimator__tree {
+  width: 1.1rem;
+  height: 2.35rem;
+  border-radius: 999px 999px 0.28rem 0.28rem;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(215, 249, 111, 0.34), transparent 28%),
+    linear-gradient(180deg, #2f7b48, #174b2d);
   box-shadow:
-    0 0 0 0 rgba(215, 249, 111, 0.28),
-    0 0 22px rgba(139, 208, 155, 0.34);
-  animation: hero-signal-node 2.6s ease-in-out infinite;
+    inset 0 -0.3rem 0 rgba(23, 32, 27, 0.12),
+    0 8px 18px rgba(33, 77, 53, 0.12);
+  transform-origin: bottom center;
+  animation: hero-forest-grow 4.8s ease-in-out infinite;
 }
 
-.hero-signal-panel__node--one {
-  right: 23%;
-  top: 26%;
+:root[data-theme="dark"] .hero-forest-estimator__tree {
+  background:
+    radial-gradient(circle at 50% 20%, rgba(215, 249, 111, 0.28), transparent 28%),
+    linear-gradient(180deg, #65b572, #2c6e42);
 }
 
-.hero-signal-panel__node--two {
-  left: 26%;
-  top: 58%;
-  animation-delay: 420ms;
+.hero-forest-estimator__tree::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -0.55rem;
+  width: 0.18rem;
+  height: 0.8rem;
+  border-radius: 999px;
+  background: #765f3a;
+  transform: translateX(-50%);
 }
 
-.hero-signal-panel__node--three {
-  right: 38%;
+.hero-forest-estimator__tree--one {
+  left: 18%;
+  bottom: 31%;
+  transform: scale(1.05);
+}
+
+.hero-forest-estimator__tree--two {
+  left: 28%;
+  bottom: 47%;
+  transform: scale(0.86);
+  animation-delay: 160ms;
+}
+
+.hero-forest-estimator__tree--three {
+  left: 38%;
+  bottom: 29%;
+  transform: scale(1.18);
+  animation-delay: 320ms;
+}
+
+.hero-forest-estimator__tree--four {
+  left: 50%;
+  bottom: 51%;
+  transform: scale(0.94);
+  animation-delay: 480ms;
+}
+
+.hero-forest-estimator__tree--five {
+  left: 59%;
+  bottom: 34%;
+  transform: scale(1.12);
+  animation-delay: 640ms;
+}
+
+.hero-forest-estimator__tree--six {
+  left: 69%;
+  bottom: 45%;
+  transform: scale(0.9);
+  animation-delay: 800ms;
+}
+
+.hero-forest-estimator__tree--seven {
+  left: 76%;
+  bottom: 24%;
+  transform: scale(1);
+  animation-delay: 960ms;
+}
+
+.hero-forest-estimator__tree--eight {
+  left: 23%;
   bottom: 20%;
-  animation-delay: 860ms;
+  transform: scale(0.78);
+  animation-delay: 1120ms;
+}
+
+.hero-forest-estimator__marker {
+  right: 8%;
+  top: 10%;
+  display: grid;
+  min-width: 3.6rem;
+  min-height: 2.1rem;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-foreground);
+  font-size: 0.72rem;
+  font-weight: 800;
+  box-shadow: 0 12px 28px rgba(33, 77, 53, 0.16);
+}
+
+.hero-forest-estimator__flow {
+  height: 2.15rem;
+  margin: 0.2rem 1.25rem;
+}
+
+.hero-forest-estimator__flow span {
+  top: 50%;
+  width: 31%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, color-mix(in srgb, var(--brand) 42%, transparent), transparent);
+}
+
+.hero-forest-estimator__flow span::after {
+  content: "";
+  position: absolute;
+  right: 0.25rem;
+  top: 50%;
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 999px;
+  background: var(--brand);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--brand) 28%, transparent);
+  transform: translateY(-50%);
+  animation: hero-estimator-flow 2.8s ease-in-out infinite;
+}
+
+.hero-forest-estimator__flow span:nth-child(1) {
+  left: 3%;
+}
+
+.hero-forest-estimator__flow span:nth-child(2) {
+  left: 34.5%;
+}
+
+.hero-forest-estimator__flow span:nth-child(2)::after {
+  animation-delay: 220ms;
+}
+
+.hero-forest-estimator__flow span:nth-child(3) {
+  right: 3%;
+}
+
+.hero-forest-estimator__flow span:nth-child(3)::after {
+  animation-delay: 440ms;
+}
+
+.hero-forest-estimator__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  padding: 0 1.25rem 1.25rem;
+}
+
+.hero-forest-estimator__metrics div {
+  min-height: 4.7rem;
+  border: 1px solid color-mix(in srgb, var(--brand) 14%, var(--border));
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--surface) 84%, transparent);
+  padding: 0.8rem;
+  box-shadow: 0 10px 28px rgba(33, 77, 53, 0.06);
+}
+
+.hero-forest-estimator__metrics strong {
+  display: block;
+  margin-top: 0.5rem;
+  color: var(--text-heading);
+  font-size: 1rem;
+  line-height: 1.15;
+}
+
+:root[data-theme="dark"] .hero-forest-estimator__metrics div {
+  border-color: rgba(139, 208, 155, 0.16);
+  background: rgba(255, 255, 255, 0.055);
+}
+
+:root[data-theme="dark"] .hero-forest-estimator__header strong,
+:root[data-theme="dark"] .hero-forest-estimator__metrics strong {
+  color: var(--text-heading);
 }
 
 .hero-scroll-cue {
@@ -455,11 +697,19 @@ textarea {
   border-radius: 999px;
   background: var(--brand);
   box-shadow: 0 0 22px color-mix(in srgb, var(--brand) 38%, transparent);
-  animation: hero-scroll-pulse 1.9s ease-in-out infinite;
+  animation: hero-scroll-breathe 2.4s ease-in-out infinite;
 }
 
 .hero-title {
   text-wrap: balance;
+}
+
+.hero-cta {
+  box-shadow: 0 14px 34px rgba(26, 45, 33, 0.1);
+}
+
+.hero-cta:hover {
+  box-shadow: 0 18px 42px rgba(26, 45, 33, 0.14);
 }
 
 .hero-copy-panel {
@@ -545,6 +795,7 @@ textarea {
 .chapter-tab {
   min-height: 2.75rem;
   cursor: pointer;
+  box-shadow: 0 10px 28px rgba(26, 45, 33, 0.06);
   transition:
     transform 220ms ease,
     border-color 220ms ease,
@@ -554,7 +805,7 @@ textarea {
 
 .chapter-tab:hover {
   transform: translateY(-2px);
-  box-shadow: 0 16px 40px rgba(26, 45, 33, 0.1);
+  box-shadow: 0 16px 40px rgba(26, 45, 33, 0.12);
 }
 
 .chapter-tab:focus-visible {
@@ -612,8 +863,41 @@ textarea {
 }
 
 @media (max-width: 1023px) {
+  .landing-header {
+    min-height: auto;
+  }
+
+  .landing-nav {
+    align-items: stretch;
+    flex-direction: column;
+    min-height: 0;
+    gap: 0.85rem;
+    padding-block: 0.85rem;
+  }
+
+  .landing-brand {
+    font-size: 1.125rem;
+  }
+
+  .landing-actions {
+    display: grid;
+    grid-template-columns: auto minmax(5rem, 0.72fr) minmax(8.75rem, 1.28fr);
+    width: 100%;
+    gap: 0.65rem;
+  }
+
+  .landing-action {
+    display: inline-flex;
+    min-height: 3rem;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 1rem;
+    white-space: nowrap;
+  }
+
   .hero-sticky {
     position: relative;
+    top: 0;
     height: auto;
     min-height: 0;
     overflow: visible;
@@ -621,6 +905,23 @@ textarea {
 
   .hero-stage-content {
     min-height: 0;
+    gap: 1.75rem;
+    padding-top: clamp(2.25rem, 7vw, 4rem);
+    padding-bottom: 2.25rem;
+  }
+
+  .hero-eco-bg {
+    opacity: 0.72;
+    mask-image: linear-gradient(to bottom, black 0%, black 88%, transparent 100%);
+  }
+
+  .hero-eco-bg__canopy,
+  .hero-eco-bg__leaf {
+    opacity: 0.18;
+  }
+
+  .carbon-bubble-field--hero {
+    opacity: 0.12;
   }
 
   .hero-console {
@@ -631,19 +932,91 @@ textarea {
     display: none;
   }
 
-  .hero-signal-panel {
+  .hero-forest-estimator {
+    display: none;
+  }
+
+  .hero-first-motion {
     display: none;
   }
 
   .hero-scroll-cue {
-    right: 1rem;
-    bottom: 1.25rem;
-    height: 5rem;
-    opacity: 0.72;
+    display: none;
+  }
+
+  .hero-title {
+    max-width: 11ch;
+    font-size: clamp(2.65rem, 13.5vw, 4.25rem);
+    line-height: 1.02;
+  }
+
+  .hero-copy-panel p:last-child {
+    max-width: 32rem;
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .hero-cta-row {
+    flex-direction: column;
+    margin-top: 2rem;
+  }
+
+  .hero-cta {
+    display: inline-flex;
+    min-height: 3.625rem;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .chapter-progress {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: 100%;
+    max-width: none;
+    gap: 0.65rem;
+    margin-top: 2.25rem;
+  }
+
+  .chapter-tab {
+    min-width: 0;
+    min-height: 3.5rem;
+    padding-inline: 0.5rem;
   }
 
   .hero-scroll-track {
     display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .landing-nav {
+    padding-inline: 1rem;
+  }
+
+  .landing-actions {
+    grid-template-columns: auto 1fr;
+  }
+
+  .landing-actions > :first-child {
+    grid-row: span 2;
+    align-self: center;
+  }
+
+  .landing-action {
+    min-height: 2.875rem;
+  }
+
+  .hero-stage-content {
+    padding-inline: 1rem;
+  }
+
+  .hero-title {
+    font-size: clamp(2.35rem, 12vw, 3.25rem);
+  }
+
+  .chapter-tab {
+    min-height: 3.25rem;
   }
 }
 
@@ -916,52 +1289,37 @@ textarea::placeholder {
   }
 }
 
-@keyframes hero-signal-pulse {
+@keyframes hero-forest-grow {
   0%,
   100% {
-    opacity: 0.32;
-    transform: scale(0.96);
+    filter: saturate(0.94);
   }
   50% {
-    opacity: 0.84;
-    transform: scale(1.02);
+    filter: saturate(1.18);
   }
 }
 
-@keyframes hero-signal-sweep {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes hero-signal-node {
+@keyframes hero-estimator-flow {
   0%,
   100% {
-    box-shadow:
-      0 0 0 0 rgba(215, 249, 111, 0.28),
-      0 0 22px rgba(139, 208, 155, 0.34);
-    transform: scale(0.9);
+    opacity: 0.28;
+    transform: translateY(-50%) scale(0.88);
   }
   50% {
-    box-shadow:
-      0 0 0 0.55rem rgba(215, 249, 111, 0),
-      0 0 30px rgba(139, 208, 155, 0.46);
-    transform: scale(1.08);
-  }
-}
-
-@keyframes hero-scroll-pulse {
-  0% {
-    opacity: 0;
-    transform: translate3d(-50%, 0, 0) scale(0.74);
-  }
-  20%,
-  70% {
     opacity: 1;
+    transform: translateY(-50%) scale(1.08);
   }
+}
+
+@keyframes hero-scroll-breathe {
+  0%,
   100% {
-    opacity: 0;
-    transform: translate3d(-50%, 6.4rem, 0) scale(0.9);
+    opacity: 0.4;
+    transform: translateX(-50%) scale(0.86);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translateX(-50%) scale(1.08);
   }
 }
 
@@ -997,9 +1355,8 @@ textarea::placeholder {
   .carbon-loader__pulse,
   .carbon-flow__line::after,
   .carbon-bubble,
-  .hero-signal-panel__ring,
-  .hero-signal-panel__sweep,
-  .hero-signal-panel__node,
+  .hero-forest-estimator__tree,
+  .hero-forest-estimator__flow span::after,
   .hero-scroll-cue__pulse {
     animation: none;
   }

@@ -173,14 +173,43 @@ function HeroFirstSlideMotion({ active }: { active: boolean }) {
       className={`hero-first-motion ${active ? "is-visible" : ""}`}
       aria-hidden="true"
     >
-      <div className="hero-signal-panel">
-        <span className="hero-signal-panel__ring hero-signal-panel__ring--outer" />
-        <span className="hero-signal-panel__ring hero-signal-panel__ring--middle" />
-        <span className="hero-signal-panel__ring hero-signal-panel__ring--inner" />
-        <span className="hero-signal-panel__sweep" />
-        <span className="hero-signal-panel__node hero-signal-panel__node--one" />
-        <span className="hero-signal-panel__node hero-signal-panel__node--two" />
-        <span className="hero-signal-panel__node hero-signal-panel__node--three" />
+      <div className="hero-forest-estimator">
+        <div className="hero-forest-estimator__header">
+          <span>Carbon predictor</span>
+          <strong>Forest project outlook</strong>
+        </div>
+        <div className="hero-forest-estimator__land">
+          <span className="hero-forest-estimator__parcel" />
+          <span className="hero-forest-estimator__stream" />
+          <span className="hero-forest-estimator__tree hero-forest-estimator__tree--one" />
+          <span className="hero-forest-estimator__tree hero-forest-estimator__tree--two" />
+          <span className="hero-forest-estimator__tree hero-forest-estimator__tree--three" />
+          <span className="hero-forest-estimator__tree hero-forest-estimator__tree--four" />
+          <span className="hero-forest-estimator__tree hero-forest-estimator__tree--five" />
+          <span className="hero-forest-estimator__tree hero-forest-estimator__tree--six" />
+          <span className="hero-forest-estimator__tree hero-forest-estimator__tree--seven" />
+          <span className="hero-forest-estimator__tree hero-forest-estimator__tree--eight" />
+          <span className="hero-forest-estimator__marker">ARR</span>
+        </div>
+        <div className="hero-forest-estimator__flow">
+          <span />
+          <span />
+          <span />
+        </div>
+        <div className="hero-forest-estimator__metrics">
+          <div>
+            <span>Area</span>
+            <strong>124 ha</strong>
+          </div>
+          <div>
+            <span>Projected credits</span>
+            <strong>7.4k</strong>
+          </div>
+          <div>
+            <span>Verification path</span>
+            <strong>Ready</strong>
+          </div>
+        </div>
       </div>
       <div className="hero-scroll-cue">
         <span className="hero-scroll-cue__line" />
@@ -493,26 +522,26 @@ export function HomeLandingExperience({
   );
 
   return (
-    <main className="min-h-screen bg-[var(--background)] text-[var(--text)] [--landing-header-height:140px] sm:[--landing-header-height:84px]">
-      <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--surface-soft)]/90 shadow-sm backdrop-blur-md">
-        <nav className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between lg:px-6">
-          <Link href="/" className="flex items-center gap-3 text-xl font-semibold tracking-tight">
+    <main className="min-h-screen bg-[var(--background)] text-[var(--text)] [--landing-header-height:132px] sm:[--landing-header-height:84px]">
+      <header className="landing-header sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--surface-soft)]/90 shadow-sm backdrop-blur-md">
+        <nav className="landing-nav mx-auto flex max-w-7xl flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between lg:px-6">
+          <Link href="/" className="landing-brand flex items-center gap-3 text-xl font-semibold tracking-tight">
             <span className="grid size-9 place-items-center rounded-lg bg-[var(--brand)] text-sm font-bold text-[var(--surface)]">
               TT
             </span>
             TeraTrace
           </Link>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="landing-actions flex flex-wrap items-center gap-3">
             <ThemeToggle />
             <Link
               href="/login"
-              className="rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium text-[var(--text)] transition hover:border-[var(--brand)]"
+              className="landing-action rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium text-[var(--text)] transition hover:border-[var(--brand)]"
             >
               Log in
             </Link>
             <Link
               href="/signup"
-              className="rounded-full bg-[var(--brand)] px-5 py-2 text-sm font-semibold text-[var(--surface)] transition hover:bg-[var(--brand-hover)]"
+              className="landing-action rounded-full bg-[var(--brand)] px-5 py-2 text-sm font-semibold text-[var(--surface)] transition hover:bg-[var(--brand-hover)]"
             >
               Create account
             </Link>
@@ -546,16 +575,16 @@ export function HomeLandingExperience({
                   {active.body}
                 </p>
               </div>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <div className="hero-cta-row mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link
                   href="/signup"
-                  className="rounded-full bg-[var(--brand)] px-6 py-3 text-center text-sm font-semibold text-[var(--surface)] shadow-sm transition hover:bg-[var(--brand-hover)]"
+                  className="hero-cta rounded-full bg-[var(--brand)] px-6 py-3 text-center text-sm font-semibold text-[var(--surface)] shadow-sm transition hover:bg-[var(--brand-hover)]"
                 >
                   Start as buyer or seller
                 </Link>
                 <Link
                   href="/login"
-                  className="rounded-full border border-[var(--border-strong)] bg-[var(--surface)] px-6 py-3 text-center text-sm font-semibold text-[var(--brand)] transition hover:border-[var(--brand)]"
+                  className="hero-cta rounded-full border border-[var(--border-strong)] bg-[var(--surface)] px-6 py-3 text-center text-sm font-semibold text-[var(--brand)] transition hover:border-[var(--brand)]"
                 >
                   View existing dashboard
                 </Link>
