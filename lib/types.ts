@@ -1,4 +1,4 @@
-export type UserRole = "buyer" | "seller" | "admin";
+export type UserRole = "buyer" | "seller" | "facilitator" | "admin";
 export type CompanyVerificationStatus = "pending" | "verified" | "needs_update";
 export type ProjectLifecycleStatus =
   | "draft"
@@ -13,6 +13,22 @@ export type InterestLifecycleStatus =
   | "more_info_requested"
   | "qualified"
   | "closed";
+export type FacilitatorOpportunityStage =
+  | "draft"
+  | "screening"
+  | "buyer_contacted"
+  | "seller_contacted"
+  | "matched"
+  | "negotiation"
+  | "closed_won"
+  | "closed_lost";
+export type FacilitatorAssignmentScope =
+  | "buyer"
+  | "seller"
+  | "project"
+  | "interest"
+  | "opportunity";
+export type FacilitatorParticipantType = "buyer" | "seller";
 
 export type Profile = {
   id: string;
@@ -105,6 +121,60 @@ export type SavedProject = {
 export type MarketplaceMessage = {
   id: string;
   interest_id: string;
+  sender_id: string;
+  message_body: string;
+  created_at?: string;
+};
+
+export type FacilitatorManagedParticipant = {
+  id: string;
+  facilitator_id: string;
+  participant_type: FacilitatorParticipantType;
+  linked_profile_id?: string | null;
+  company_name: string;
+  contact_name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  country?: string | null;
+  notes?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type FacilitatorAssignment = {
+  id: string;
+  facilitator_id: string;
+  assignment_scope: FacilitatorAssignmentScope;
+  target_id: string;
+  assigned_by?: string | null;
+  notes?: string | null;
+  created_at?: string;
+};
+
+export type FacilitatorOpportunity = {
+  id: string;
+  facilitator_id: string;
+  buyer_profile_id?: string | null;
+  seller_profile_id?: string | null;
+  buyer_participant_id?: string | null;
+  seller_participant_id?: string | null;
+  project_id?: string | null;
+  interest_id?: string | null;
+  title: string;
+  requested_credits?: number | null;
+  fit_score: number;
+  stage: FacilitatorOpportunityStage;
+  priority: string;
+  facilitator_notes?: string | null;
+  next_action?: string | null;
+  closed_reason?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type FacilitatorMessage = {
+  id: string;
+  opportunity_id: string;
   sender_id: string;
   message_body: string;
   created_at?: string;

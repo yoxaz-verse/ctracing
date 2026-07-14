@@ -1,4 +1,4 @@
-create type public.user_role as enum ('buyer', 'seller', 'admin');
+create type public.user_role as enum ('buyer', 'seller', 'facilitator', 'admin');
 
 create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
@@ -125,6 +125,62 @@ create table public.marketplace_messages (
   created_at timestamptz not null default now()
 );
 
+create table public.facilitator_managed_participants (
+  id uuid primary key default gen_random_uuid(),
+  facilitator_id uuid not null references public.profiles(id) on delete cascade,
+  participant_type text not null check (participant_type in ('buyer', 'seller')),
+  linked_profile_id uuid references public.profiles(id) on delete set null,
+  company_name text not null,
+  contact_name text,
+  email text,
+  phone text,
+  country text,
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table public.facilitator_assignments (
+  id uuid primary key default gen_random_uuid(),
+  facilitator_id uuid not null references public.profiles(id) on delete cascade,
+  assignment_scope text not null check (assignment_scope in ('buyer', 'seller', 'project', 'interest', 'opportunity')),
+  target_id uuid not null,
+  assigned_by uuid references public.profiles(id) on delete set null,
+  notes text,
+  created_at timestamptz not null default now(),
+  unique (facilitator_id, assignment_scope, target_id)
+);
+
+create table public.facilitator_opportunities (
+  id uuid primary key default gen_random_uuid(),
+  facilitator_id uuid not null references public.profiles(id) on delete cascade,
+  buyer_profile_id uuid references public.profiles(id) on delete set null,
+  seller_profile_id uuid references public.profiles(id) on delete set null,
+  buyer_participant_id uuid references public.facilitator_managed_participants(id) on delete set null,
+  seller_participant_id uuid references public.facilitator_managed_participants(id) on delete set null,
+  project_id uuid references public.carbon_projects(id) on delete set null,
+  interest_id uuid references public.buyer_interests(id) on delete set null,
+  title text not null,
+  requested_credits integer check (requested_credits is null or requested_credits > 0),
+  fit_score integer not null default 50 check (fit_score between 0 and 100),
+  stage text not null default 'draft'
+    check (stage in ('draft', 'screening', 'buyer_contacted', 'seller_contacted', 'matched', 'negotiation', 'closed_won', 'closed_lost')),
+  priority text not null default 'medium' check (priority in ('low', 'medium', 'high')),
+  facilitator_notes text,
+  next_action text,
+  closed_reason text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table public.facilitator_messages (
+  id uuid primary key default gen_random_uuid(),
+  opportunity_id uuid not null references public.facilitator_opportunities(id) on delete cascade,
+  sender_id uuid not null references public.profiles(id) on delete cascade,
+  message_body text not null,
+  created_at timestamptz not null default now()
+);
+
 create table public.notifications (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profiles(id) on delete cascade,
@@ -154,6 +210,10 @@ alter table public.project_documents enable row level security;
 alter table public.project_reviews enable row level security;
 alter table public.saved_projects enable row level security;
 alter table public.marketplace_messages enable row level security;
+alter table public.facilitator_managed_participants enable row level security;
+alter table public.facilitator_assignments enable row level security;
+alter table public.facilitator_opportunities enable row level security;
+alter table public.facilitator_messages enable row level security;
 alter table public.notifications enable row level security;
 alter table public.audit_logs enable row level security;
 
@@ -200,6 +260,37 @@ as $$
          bi.buyer_id = auth.uid()
          or cp.seller_id = auth.uid()
          or public.current_user_role()::text = 'admin'
+         or exists (
+           select 1 from public.facilitator_assignments fa
+            where fa.facilitator_id = auth.uid()
+              and fa.assignment_scope = 'interest'
+              and fa.target_id = bi.id
+         )
+         or exists (
+           select 1 from public.facilitator_opportunities fo
+            where fo.facilitator_id = auth.uid()
+              and fo.interest_id = bi.id
+         )
+       )
+  )
+$$;
+
+create or replace function public.can_access_facilitator_opportunity(opportunity_id_input uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+      from public.facilitator_opportunities fo
+     where fo.id = opportunity_id_input
+       and (
+         fo.facilitator_id = auth.uid()
+         or fo.buyer_profile_id = auth.uid()
+         or fo.seller_profile_id = auth.uid()
+         or public.current_user_role()::text = 'admin'
        )
   )
 $$;
@@ -223,6 +314,7 @@ $$;
 
 grant execute on function public.is_project_seller(uuid) to authenticated;
 grant execute on function public.can_access_interest(uuid) to authenticated;
+grant execute on function public.can_access_facilitator_opportunity(uuid) to authenticated;
 grant execute on function public.record_audit(text, text, uuid, jsonb) to authenticated;
 
 create policy "Profiles are readable by their owner"
@@ -230,6 +322,10 @@ create policy "Profiles are readable by their owner"
   using (
     auth.uid() = id
     or public.current_user_role()::text = 'admin'
+    or (
+      public.current_user_role()::text = 'facilitator'
+      and role::text in ('buyer', 'seller', 'facilitator')
+    )
   );
 
 create policy "Users can insert their own profile"
@@ -290,7 +386,7 @@ create policy "Buyers can read their own interests"
   to authenticated
   using (
     buyer_id = auth.uid()
-    or public.current_user_role()::text = 'admin'
+    or public.current_user_role()::text in ('admin', 'facilitator')
     or exists (
       select 1 from public.carbon_projects
       where carbon_projects.id = buyer_interests.project_id
@@ -378,6 +474,65 @@ create policy "Interest participants can send messages"
   on public.marketplace_messages for insert
   to authenticated
   with check (sender_id = auth.uid() and public.can_access_interest(interest_id));
+
+create policy "Facilitators can manage owned participants"
+  on public.facilitator_managed_participants for all
+  to authenticated
+  using (facilitator_id = auth.uid() or public.current_user_role()::text = 'admin')
+  with check (
+    (facilitator_id = auth.uid() and public.current_user_role()::text = 'facilitator')
+    or public.current_user_role()::text = 'admin'
+  );
+
+create policy "Facilitators can manage assignments"
+  on public.facilitator_assignments for all
+  to authenticated
+  using (facilitator_id = auth.uid() or public.current_user_role()::text = 'admin')
+  with check (
+    (facilitator_id = auth.uid() and public.current_user_role()::text = 'facilitator')
+    or public.current_user_role()::text = 'admin'
+  );
+
+create policy "Facilitator opportunities are participant readable"
+  on public.facilitator_opportunities for select
+  to authenticated
+  using (
+    facilitator_id = auth.uid()
+    or buyer_profile_id = auth.uid()
+    or seller_profile_id = auth.uid()
+    or public.current_user_role()::text = 'admin'
+  );
+
+create policy "Facilitators can create opportunities"
+  on public.facilitator_opportunities for insert
+  to authenticated
+  with check (
+    facilitator_id = auth.uid()
+    and public.current_user_role()::text = 'facilitator'
+  );
+
+create policy "Facilitators can update owned opportunities"
+  on public.facilitator_opportunities for update
+  to authenticated
+  using (facilitator_id = auth.uid() or public.current_user_role()::text = 'admin')
+  with check (facilitator_id = auth.uid() or public.current_user_role()::text = 'admin');
+
+create policy "Facilitator messages are opportunity readable"
+  on public.facilitator_messages for select
+  to authenticated
+  using (public.can_access_facilitator_opportunity(opportunity_id));
+
+create policy "Facilitators can send opportunity messages"
+  on public.facilitator_messages for insert
+  to authenticated
+  with check (
+    sender_id = auth.uid()
+    and exists (
+      select 1 from public.facilitator_opportunities fo
+       where fo.id = opportunity_id
+         and fo.facilitator_id = auth.uid()
+    )
+  );
 
 create policy "Users can read their notifications"
   on public.notifications for select
@@ -467,6 +622,14 @@ create trigger buyer_interests_set_updated_at
 
 create trigger project_documents_set_updated_at
   before update on public.project_documents
+  for each row execute function public.set_updated_at();
+
+create trigger facilitator_managed_participants_set_updated_at
+  before update on public.facilitator_managed_participants
+  for each row execute function public.set_updated_at();
+
+create trigger facilitator_opportunities_set_updated_at
+  before update on public.facilitator_opportunities
   for each row execute function public.set_updated_at();
 
 create or replace function public.verify_teratrace_email(token_hash_input text)

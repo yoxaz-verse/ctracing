@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 async function render(path = "/") {
@@ -37,4 +38,25 @@ test("server-renders the TeraTrace homepage", async () => {
   assert.match(html, /For facilitators/);
   assert.doesNotMatch(html, /For admins|Admin oversight|Operator audit/i);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton/i);
+});
+
+test("server-renders facilitator signup role", async () => {
+  const response = await render("/signup");
+  assert.equal(response.status, 200);
+
+  const html = await response.text();
+  assert.match(html, /value="facilitator"/);
+  assert.match(html, /Match credible opportunities/);
+  assert.match(html, /admin verification/i);
+});
+
+test("facilitator dashboard shell navigation is wired", async () => {
+  const source = await readFile(
+    new URL("../app/dashboard/_components/DashboardShell.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(source, /Facilitator workspace/);
+  assert.match(source, /\/dashboard\/facilitator\/matches/);
+  assert.match(source, /\/dashboard\/facilitator\/messages/);
 });

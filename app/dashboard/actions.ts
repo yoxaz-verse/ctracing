@@ -55,6 +55,35 @@ function cleanInterestStatus(value: string) {
     : "seller_review";
 }
 
+function cleanFacilitatorOpportunityStage(value: string) {
+  return [
+    "draft",
+    "screening",
+    "buyer_contacted",
+    "seller_contacted",
+    "matched",
+    "negotiation",
+    "closed_won",
+    "closed_lost",
+  ].includes(value)
+    ? value
+    : "draft";
+}
+
+function cleanFacilitatorPriority(value: string) {
+  return ["low", "medium", "high"].includes(value) ? value : "medium";
+}
+
+function cleanFacilitatorParticipantType(value: string) {
+  return value === "seller" ? "seller" : "buyer";
+}
+
+function cleanFacilitatorAssignmentScope(value: string) {
+  return ["buyer", "seller", "project", "interest", "opportunity"].includes(value)
+    ? value
+    : "buyer";
+}
+
 function cleanCompanyVerificationStatus(value: string) {
   return ["pending", "verified", "needs_update"].includes(value)
     ? value
@@ -74,6 +103,10 @@ function getOptionalNumber(formData: FormData, key: string) {
 function getOptionalDate(formData: FormData, key: string) {
   const value = getString(formData, key);
   return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
+}
+
+function getOptionalString(formData: FormData, key: string) {
+  return getString(formData, key) || null;
 }
 
 function getRedirectPath(formData: FormData, fallback: string) {
@@ -280,7 +313,11 @@ export async function updateEmissionFactor(formData: FormData) {
 export async function updateCompanyProfile(formData: FormData) {
   const { supabase, profile } = await getSessionProfile();
 
-  if (profile.role !== "buyer" && profile.role !== "seller") {
+  if (
+    profile.role !== "buyer" &&
+    profile.role !== "seller" &&
+    profile.role !== "facilitator"
+  ) {
     redirectForRole(profile.role);
   }
 
@@ -288,6 +325,8 @@ export async function updateCompanyProfile(formData: FormData) {
     formData,
     profile.role === "seller"
       ? "/dashboard/seller/profile"
+      : profile.role === "facilitator"
+        ? "/dashboard/facilitator/profile"
       : "/dashboard/buyer/profile",
   );
   const companyName = getRequiredString(formData, "companyName");
@@ -312,7 +351,7 @@ export async function updateCompanyProfile(formData: FormData) {
   };
 
   const roleUpdate =
-    profile.role === "buyer"
+    profile.role === "buyer" || profile.role === "facilitator"
       ? {
           annual_credit_demand: getOptionalNumber(
             formData,
@@ -386,6 +425,8 @@ export async function updateCompanyProfile(formData: FormData) {
   revalidatePath("/dashboard/buyer/profile");
   revalidatePath("/dashboard/seller");
   revalidatePath("/dashboard/seller/profile");
+  revalidatePath("/dashboard/facilitator");
+  revalidatePath("/dashboard/facilitator/profile");
   revalidatePath("/dashboard/admin");
   revalidatePath("/dashboard/admin/users");
   revalidatePath(redirectTo);
@@ -724,7 +765,7 @@ export async function adminReviewCompanyProfile(formData: FormData) {
       company_verification_note: reviewNote || null,
     })
     .eq("id", userId)
-    .in("role", ["buyer", "seller"]);
+    .in("role", ["buyer", "seller", "facilitator"]);
 
   if (error) {
     redirect(`${redirectTo}?error=${encodeURIComponent(error.message)}`);
@@ -747,6 +788,8 @@ export async function adminReviewCompanyProfile(formData: FormData) {
             "An admin reviewed your company profile and requested updates.",
       reviewedProfile.role === "seller"
         ? "/dashboard/seller/profile"
+        : reviewedProfile.role === "facilitator"
+          ? "/dashboard/facilitator/profile"
         : "/dashboard/buyer/profile",
     );
   }
@@ -757,6 +800,8 @@ export async function adminReviewCompanyProfile(formData: FormData) {
   revalidatePath("/dashboard/buyer/profile");
   revalidatePath("/dashboard/seller");
   revalidatePath("/dashboard/seller/profile");
+  revalidatePath("/dashboard/facilitator");
+  revalidatePath("/dashboard/facilitator/profile");
   revalidatePath(redirectTo);
   redirect(redirectTo);
 }
@@ -785,6 +830,289 @@ export async function respondToInterest(formData: FormData) {
   await recordAudit(supabase, "interest.responded", "buyer_interest", interestId);
   revalidatePath("/dashboard/seller/inquiries");
   revalidatePath("/dashboard/buyer/interests");
+  redirect(redirectTo);
+}
+
+async function requireVerifiedFacilitator() {
+  const session = await getSessionProfile();
+
+  if (session.profile.role !== "facilitator") {
+    redirectForRole(session.profile.role);
+  }
+
+  if (session.profile.company_verification_status !== "verified") {
+    redirect("/dashboard/facilitator/profile?error=Admin verification is required before managing facilitator workflows.");
+  }
+
+  return session;
+}
+
+export async function createManagedParticipant(formData: FormData) {
+  const { supabase, profile } = await requireVerifiedFacilitator();
+  const participantType = cleanFacilitatorParticipantType(
+    getRequiredString(formData, "participantType"),
+  );
+  const redirectTo = getRedirectPath(
+    formData,
+    participantType === "seller"
+      ? "/dashboard/facilitator/sellers"
+      : "/dashboard/facilitator/buyers",
+  );
+
+  const { data, error } = await supabase
+    .from("facilitator_managed_participants")
+    .insert({
+      facilitator_id: profile.id,
+      participant_type: participantType,
+      company_name: getRequiredString(formData, "companyName"),
+      contact_name: getOptionalString(formData, "contactName"),
+      email: getOptionalString(formData, "email"),
+      phone: getOptionalString(formData, "phone"),
+      country: getOptionalString(formData, "country"),
+      notes: getOptionalString(formData, "notes"),
+    })
+    .select("id")
+    .single<{ id: string }>();
+
+  if (error) {
+    redirect(`${redirectTo}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  await recordAudit(
+    supabase,
+    "facilitator_participant.created",
+    "facilitator_managed_participant",
+    data?.id ?? null,
+    { participant_type: participantType },
+  );
+
+  revalidatePath("/dashboard/facilitator");
+  revalidatePath("/dashboard/facilitator/buyers");
+  revalidatePath("/dashboard/facilitator/sellers");
+  redirect(redirectTo);
+}
+
+export async function linkManagedParticipantToProfile(formData: FormData) {
+  const { supabase, profile } = await requireVerifiedFacilitator();
+  const participantId = getRequiredString(formData, "participantId");
+  const linkedProfileId = getRequiredString(formData, "linkedProfileId");
+  const participantType = cleanFacilitatorParticipantType(
+    getRequiredString(formData, "participantType"),
+  );
+  const redirectTo = getRedirectPath(formData, "/dashboard/facilitator/buyers");
+
+  const { error } = await supabase
+    .from("facilitator_managed_participants")
+    .update({ linked_profile_id: linkedProfileId })
+    .eq("id", participantId)
+    .eq("facilitator_id", profile.id);
+
+  if (error) {
+    redirect(`${redirectTo}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  await supabase.from("facilitator_assignments").upsert({
+    facilitator_id: profile.id,
+    assignment_scope: participantType,
+    target_id: linkedProfileId,
+    assigned_by: profile.id,
+    notes: "Linked from facilitator-managed participant.",
+  });
+
+  await recordAudit(
+    supabase,
+    "facilitator_participant.linked",
+    "facilitator_managed_participant",
+    participantId,
+    { linked_profile_id: linkedProfileId },
+  );
+
+  revalidatePath("/dashboard/facilitator");
+  revalidatePath("/dashboard/facilitator/buyers");
+  revalidatePath("/dashboard/facilitator/sellers");
+  redirect(redirectTo);
+}
+
+export async function assignFacilitatorParticipant(formData: FormData) {
+  const { supabase, profile } = await requireVerifiedFacilitator();
+  const assignmentScope = cleanFacilitatorAssignmentScope(
+    getRequiredString(formData, "assignmentScope"),
+  );
+  const targetId = getRequiredString(formData, "targetId");
+  const redirectTo = getRedirectPath(formData, "/dashboard/facilitator");
+
+  const { data, error } = await supabase
+    .from("facilitator_assignments")
+    .upsert({
+      facilitator_id: profile.id,
+      assignment_scope: assignmentScope,
+      target_id: targetId,
+      assigned_by: profile.id,
+      notes: getOptionalString(formData, "assignmentNotes"),
+    })
+    .select("id")
+    .single<{ id: string }>();
+
+  if (error) {
+    redirect(`${redirectTo}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  await recordAudit(
+    supabase,
+    "facilitator_assignment.created",
+    "facilitator_assignment",
+    data?.id ?? null,
+    { assignment_scope: assignmentScope, target_id: targetId },
+  );
+
+  revalidatePath("/dashboard/facilitator");
+  revalidatePath("/dashboard/facilitator/buyers");
+  revalidatePath("/dashboard/facilitator/sellers");
+  revalidatePath("/dashboard/facilitator/projects");
+  redirect(redirectTo);
+}
+
+export async function createFacilitatorOpportunity(formData: FormData) {
+  const { supabase, profile } = await requireVerifiedFacilitator();
+  const redirectTo = getRedirectPath(formData, "/dashboard/facilitator/matches");
+  const requestedCredits = getOptionalNumber(formData, "requestedCredits");
+
+  const { data, error } = await supabase
+    .from("facilitator_opportunities")
+    .insert({
+      facilitator_id: profile.id,
+      buyer_profile_id: getOptionalString(formData, "buyerProfileId"),
+      seller_profile_id: getOptionalString(formData, "sellerProfileId"),
+      buyer_participant_id: getOptionalString(formData, "buyerParticipantId"),
+      seller_participant_id: getOptionalString(formData, "sellerParticipantId"),
+      project_id: getOptionalString(formData, "projectId"),
+      interest_id: getOptionalString(formData, "interestId"),
+      title: getRequiredString(formData, "title"),
+      requested_credits:
+        requestedCredits === null ? null : Math.max(1, Math.round(requestedCredits)),
+      fit_score: Math.min(
+        100,
+        Math.max(0, Math.round(getOptionalNumber(formData, "fitScore") ?? 50)),
+      ),
+      stage: cleanFacilitatorOpportunityStage(getString(formData, "stage")),
+      priority: cleanFacilitatorPriority(getString(formData, "priority")),
+      facilitator_notes: getOptionalString(formData, "facilitatorNotes"),
+      next_action: getOptionalString(formData, "nextAction"),
+    })
+    .select("id")
+    .single<{ id: string }>();
+
+  if (error) {
+    redirect(`${redirectTo}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  await recordAudit(
+    supabase,
+    "facilitator_opportunity.created",
+    "facilitator_opportunity",
+    data?.id ?? null,
+  );
+
+  revalidatePath("/dashboard/facilitator");
+  revalidatePath("/dashboard/facilitator/matches");
+  revalidatePath("/dashboard/facilitator/messages");
+  redirect(redirectTo);
+}
+
+export async function updateFacilitatorOpportunity(formData: FormData) {
+  const { supabase, profile } = await requireVerifiedFacilitator();
+  const opportunityId = getRequiredString(formData, "opportunityId");
+  const redirectTo = getRedirectPath(formData, "/dashboard/facilitator/matches");
+
+  const { error } = await supabase
+    .from("facilitator_opportunities")
+    .update({
+      stage: cleanFacilitatorOpportunityStage(getString(formData, "stage")),
+      priority: cleanFacilitatorPriority(getString(formData, "priority")),
+      fit_score: Math.min(
+        100,
+        Math.max(0, Math.round(getOptionalNumber(formData, "fitScore") ?? 50)),
+      ),
+      facilitator_notes: getOptionalString(formData, "facilitatorNotes"),
+      next_action: getOptionalString(formData, "nextAction"),
+    })
+    .eq("id", opportunityId)
+    .eq("facilitator_id", profile.id);
+
+  if (error) {
+    redirect(`${redirectTo}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  await recordAudit(
+    supabase,
+    "facilitator_opportunity.updated",
+    "facilitator_opportunity",
+    opportunityId,
+  );
+
+  revalidatePath("/dashboard/facilitator");
+  revalidatePath("/dashboard/facilitator/matches");
+  revalidatePath("/dashboard/facilitator/messages");
+  redirect(redirectTo);
+}
+
+export async function closeFacilitatorOpportunity(formData: FormData) {
+  const { supabase, profile } = await requireVerifiedFacilitator();
+  const opportunityId = getRequiredString(formData, "opportunityId");
+  const stage = getString(formData, "stage") === "closed_won" ? "closed_won" : "closed_lost";
+  const redirectTo = getRedirectPath(formData, "/dashboard/facilitator/matches");
+
+  const { error } = await supabase
+    .from("facilitator_opportunities")
+    .update({
+      stage,
+      closed_reason: getOptionalString(formData, "closedReason"),
+      next_action: null,
+    })
+    .eq("id", opportunityId)
+    .eq("facilitator_id", profile.id);
+
+  if (error) {
+    redirect(`${redirectTo}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  await recordAudit(
+    supabase,
+    "facilitator_opportunity.closed",
+    "facilitator_opportunity",
+    opportunityId,
+    { stage },
+  );
+
+  revalidatePath("/dashboard/facilitator");
+  revalidatePath("/dashboard/facilitator/matches");
+  redirect(redirectTo);
+}
+
+export async function sendFacilitatorMessage(formData: FormData) {
+  const { supabase, profile } = await requireVerifiedFacilitator();
+  const opportunityId = getRequiredString(formData, "opportunityId");
+  const redirectTo = getRedirectPath(formData, "/dashboard/facilitator/messages");
+
+  const { error } = await supabase.from("facilitator_messages").insert({
+    opportunity_id: opportunityId,
+    sender_id: profile.id,
+    message_body: getRequiredString(formData, "messageBody"),
+  });
+
+  if (error) {
+    redirect(`${redirectTo}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  await recordAudit(
+    supabase,
+    "facilitator_message.sent",
+    "facilitator_opportunity",
+    opportunityId,
+  );
+
+  revalidatePath("/dashboard/facilitator/messages");
+  revalidatePath("/dashboard/facilitator/matches");
   redirect(redirectTo);
 }
 

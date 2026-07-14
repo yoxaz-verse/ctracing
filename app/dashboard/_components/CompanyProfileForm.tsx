@@ -13,7 +13,7 @@ export function CompanyProfileForm({
   redirectTo,
 }: {
   profile: Profile;
-  role: "buyer" | "seller";
+  role: "buyer" | "seller" | "facilitator";
   redirectTo: string;
 }) {
   return (
@@ -157,7 +157,11 @@ export function CompanyProfileForm({
 
       <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-[#dfe5dc]">
         <h2 className="text-2xl font-semibold">
-          {role === "buyer" ? "Buyer carbon details" : "Seller carbon details"}
+          {role === "buyer"
+            ? "Buyer carbon details"
+            : role === "seller"
+              ? "Seller carbon details"
+              : "Facilitator focus"}
         </h2>
         {role === "buyer" ? (
           <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -198,7 +202,7 @@ export function CompanyProfileForm({
               />
             </label>
           </div>
-        ) : (
+        ) : role === "seller" ? (
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <label>
               <span className="text-sm font-medium text-[#314239]">
@@ -234,6 +238,45 @@ export function CompanyProfileForm({
                 defaultValue={profile.registry_experience ?? ""}
                 className="mt-2 w-full rounded-2xl border border-[#cbd5c5] bg-white px-4 py-3 outline-none transition focus:border-[#214d35]"
                 placeholder="Summarize registry experience, prior issuances, or validation stage."
+              />
+            </label>
+          </div>
+        ) : (
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <label>
+              <span className="text-sm font-medium text-[#314239]">
+                Annual match volume target
+              </span>
+              <input
+                min="0"
+                type="number"
+                name="annualCreditDemand"
+                defaultValue={numberValue(profile.annual_credit_demand)}
+                className="mt-2 w-full rounded-2xl border border-[#cbd5c5] bg-white px-4 py-3 outline-none transition focus:border-[#214d35]"
+                placeholder="50000"
+              />
+            </label>
+            <label>
+              <span className="text-sm font-medium text-[#314239]">
+                Focus project types
+              </span>
+              <input
+                name="preferredProjectTypes"
+                defaultValue={profile.preferred_project_types ?? ""}
+                className="mt-2 w-full rounded-2xl border border-[#cbd5c5] bg-white px-4 py-3 outline-none transition focus:border-[#214d35]"
+                placeholder="ARR, cookstoves, renewable energy"
+              />
+            </label>
+            <label className="md:col-span-2">
+              <span className="text-sm font-medium text-[#314239]">
+                Matchmaking approach
+              </span>
+              <textarea
+                name="carbonPurchaseGoal"
+                rows={4}
+                defaultValue={profile.carbon_purchase_goal ?? ""}
+                className="mt-2 w-full rounded-2xl border border-[#cbd5c5] bg-white px-4 py-3 outline-none transition focus:border-[#214d35]"
+                placeholder="Describe the buyer-seller segments, regions, or credibility signals you focus on."
               />
             </label>
           </div>

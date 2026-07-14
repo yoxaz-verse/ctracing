@@ -22,7 +22,7 @@ import type {
 } from "@/lib/estimator/types";
 
 type EstimatorMode = "public" | "dashboard";
-type UserRole = "buyer" | "seller" | "admin";
+type UserRole = "buyer" | "seller" | "facilitator" | "admin";
 
 type CarbonEstimatorProps = {
   mode?: EstimatorMode;

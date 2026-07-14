@@ -10,12 +10,14 @@ export function DashboardShell({
   children,
 }: {
   profile: Profile;
-  activeRole: "buyer" | "seller" | "admin";
+  activeRole: "buyer" | "seller" | "facilitator" | "admin";
   children: React.ReactNode;
 }) {
   const workspaceLabel =
     activeRole === "admin"
       ? "Admin workspace"
+      : activeRole === "facilitator"
+        ? "Facilitator workspace"
       : activeRole === "seller"
         ? "Seller workspace"
         : "Buyer workspace";
@@ -36,6 +38,16 @@ export function DashboardShell({
             ["Inquiries", "/dashboard/seller/inquiries"],
             ["Profile", "/dashboard/seller/profile"],
           ]
+        : activeRole === "facilitator"
+          ? [
+              ["Overview", "/dashboard/facilitator"],
+              ["Matches", "/dashboard/facilitator/matches"],
+              ["Buyers", "/dashboard/facilitator/buyers"],
+              ["Sellers", "/dashboard/facilitator/sellers"],
+              ["Projects", "/dashboard/facilitator/projects"],
+              ["Messages", "/dashboard/facilitator/messages"],
+              ["Profile", "/dashboard/facilitator/profile"],
+            ]
         : [
             ["Overview", "/dashboard/admin"],
             ["Estimator", "/dashboard/estimator"],

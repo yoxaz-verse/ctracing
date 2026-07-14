@@ -62,6 +62,9 @@ export default async function AdminDashboardPage() {
   const projectsById = new Map(projects.map((row) => [row.id, row]));
   const buyerCount = profiles.filter((row) => row.role === "buyer").length;
   const sellerCount = profiles.filter((row) => row.role === "seller").length;
+  const facilitatorCount = profiles.filter(
+    (row) => row.role === "facilitator",
+  ).length;
   const totalCredits = projects.reduce(
     (sum, project) => sum + project.available_credits,
     0,
@@ -75,7 +78,7 @@ export default async function AdminDashboardPage() {
             Admin workspace
           </p>
           <h1 className="mt-3 text-4xl font-semibold tracking-tight">
-            Monitor buyers, sellers, listings, and purchase interest.
+            Monitor buyers, sellers, facilitators, listings, and purchase interest.
           </h1>
           <p className="mt-4 max-w-3xl leading-7 text-[#5b6a61]">
             This read-only control view gives TeraTrace operators visibility
@@ -93,9 +96,10 @@ export default async function AdminDashboardPage() {
         </div>
       </section>
 
-      <section className="mt-8 grid gap-4 md:grid-cols-5">
+      <section className="mt-8 grid gap-4 md:grid-cols-3 xl:grid-cols-6">
         <MetricCard label="Buyers" value={String(buyerCount)} detail="Registered buyer profiles." />
         <MetricCard label="Sellers" value={String(sellerCount)} detail="Registered seller profiles." />
+        <MetricCard label="Facilitators" value={String(facilitatorCount)} detail="Matchmaking workspaces." />
         <MetricCard label="Projects" value={String(projects.length)} detail="Live project listings." />
         <MetricCard label="Listed credits" value={formatCredits(totalCredits)} detail="Estimated visible supply." />
         <MetricCard label="Interests" value={String(interests.length)} detail="Buyer demand records." />

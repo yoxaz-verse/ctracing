@@ -13,7 +13,9 @@ function getMetadataRole(metadata: AuthMetadata | null | undefined): UserRole {
     return "admin";
   }
 
-  return metadata?.role === "seller" ? "seller" : "buyer";
+  return metadata?.role === "seller" || metadata?.role === "facilitator"
+    ? metadata.role
+    : "buyer";
 }
 
 function getMetadataCompanyName(metadata: AuthMetadata | null | undefined) {

@@ -11,10 +11,21 @@ const statusStyles: Record<string, string> = {
   closed: "bg-[#f3f6f0] text-[#6a756d]",
   buyer: "bg-[#eef6ed] text-[#214d35]",
   seller: "bg-[#eef6ed] text-[#214d35]",
+  facilitator: "bg-[#e8f0ff] text-[#24426f]",
   admin: "bg-[#17201b] text-white",
   pending: "bg-[#fff7df] text-[#795b12]",
   verified: "bg-[#eef6ed] text-[#214d35]",
   needs_update: "bg-[#fff1ed] text-[#8a2c16]",
+  screening: "bg-[#fff7df] text-[#795b12]",
+  buyer_contacted: "bg-[#e8f0ff] text-[#24426f]",
+  seller_contacted: "bg-[#e8f0ff] text-[#24426f]",
+  matched: "bg-[#eef6ed] text-[#214d35]",
+  negotiation: "bg-[#fff7df] text-[#795b12]",
+  closed_won: "bg-[#214d35] text-white",
+  closed_lost: "bg-[#f3f6f0] text-[#6a756d]",
+  high: "bg-[#fff1ed] text-[#8a2c16]",
+  medium: "bg-[#fff7df] text-[#795b12]",
+  low: "bg-[#f3f6f0] text-[#314239]",
 };
 
 export function StatusBadge({ status }: { status: string | null | undefined }) {

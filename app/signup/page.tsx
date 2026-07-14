@@ -25,8 +25,8 @@ export default async function SignupPage({
             Create a carbon market workspace.
           </h1>
           <p className="mt-5 leading-7 text-white/68">
-            Select your company role now. The app will route buyers and sellers
-            into separate dashboards immediately after signup.
+            Select your company role now. The app will route buyers, sellers,
+            and facilitators into separate workspaces after signup.
           </p>
           <div className="mt-10 space-y-4 text-sm text-white/72">
             <p className="rounded-2xl border border-white/10 bg-white/[0.06] p-4">
@@ -36,6 +36,10 @@ export default async function SignupPage({
             <p className="rounded-2xl border border-white/10 bg-white/[0.06] p-4">
               Sellers can manage project listings, visible credits, and buyer
               inquiry signals.
+            </p>
+            <p className="rounded-2xl border border-white/10 bg-white/[0.06] p-4">
+              Facilitators can build buyer-seller match pipelines after admin
+              verification.
             </p>
           </div>
         </div>
@@ -82,7 +86,7 @@ export default async function SignupPage({
               <legend className="text-sm font-medium text-[#314239]">
                 Company role
               </legend>
-              <div className="mt-2 grid gap-3 sm:grid-cols-2">
+              <div className="mt-2 grid gap-3 sm:grid-cols-3">
                 <label className="cursor-pointer rounded-2xl border border-[#cbd5c5] p-4 has-[:checked]:border-[#214d35] has-[:checked]:bg-[#eef6ed]">
                   <input
                     defaultChecked
@@ -106,6 +110,18 @@ export default async function SignupPage({
                   <span className="font-semibold">Seller</span>
                   <p className="mt-2 text-sm text-[#5b6a61]">
                     List projects and review buyer demand.
+                  </p>
+                </label>
+                <label className="cursor-pointer rounded-2xl border border-[#cbd5c5] p-4 has-[:checked]:border-[#214d35] has-[:checked]:bg-[#eef6ed]">
+                  <input
+                    className="mr-2"
+                    type="radio"
+                    name="role"
+                    value="facilitator"
+                  />
+                  <span className="font-semibold">Facilitator</span>
+                  <p className="mt-2 text-sm text-[#5b6a61]">
+                    Match credible opportunities.
                   </p>
                 </label>
               </div>

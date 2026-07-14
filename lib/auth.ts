@@ -25,7 +25,12 @@ export async function getSessionProfile() {
   const resolvedProfile: Profile = profile ?? {
     id: user.id,
     email: user.email ?? "",
-    role: fallbackRole === "seller" ? "seller" : "buyer",
+    role:
+      fallbackRole === "seller" ||
+      fallbackRole === "facilitator" ||
+      fallbackRole === "admin"
+        ? fallbackRole
+        : "buyer",
     company_name: (user.user_metadata?.company_name as string | undefined) ?? null,
     company_verification_status: "pending",
     email_verified_at: null,
@@ -41,6 +46,10 @@ export async function getSessionProfile() {
 export function redirectForRole(role: UserRole) {
   if (role === "admin") {
     redirect("/dashboard/admin");
+  }
+
+  if (role === "facilitator") {
+    redirect("/dashboard/facilitator");
   }
 
   redirect(role === "seller" ? "/dashboard/seller" : "/dashboard/buyer");

@@ -24,7 +24,8 @@ function getString(formData: FormData, key: string) {
 }
 
 function getRole(formData: FormData): UserRole {
-  return getString(formData, "role") === "seller" ? "seller" : "buyer";
+  const role = getString(formData, "role");
+  return role === "seller" || role === "facilitator" ? role : "buyer";
 }
 
 function getMetadataRole(metadata: AuthMetadata | null | undefined): UserRole {
@@ -32,12 +33,18 @@ function getMetadataRole(metadata: AuthMetadata | null | undefined): UserRole {
     return "admin";
   }
 
-  return metadata?.role === "seller" ? "seller" : "buyer";
+  return metadata?.role === "seller" || metadata?.role === "facilitator"
+    ? metadata.role
+    : "buyer";
 }
 
 function getRolePath(role: UserRole) {
   if (role === "admin") {
     return "/dashboard/admin";
+  }
+
+  if (role === "facilitator") {
+    return "/dashboard/facilitator";
   }
 
   return role === "seller" ? "/dashboard/seller" : "/dashboard/buyer";

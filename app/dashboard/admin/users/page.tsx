@@ -71,6 +71,7 @@ export default async function AdminUsersPage({
           <option value="">All roles</option>
           <option value="buyer">Buyer</option>
           <option value="seller">Seller</option>
+          <option value="facilitator">Facilitator</option>
           <option value="admin">Admin</option>
         </select>
         <button className="rounded-full bg-[#214d35] px-5 py-3 text-sm font-semibold text-white">
@@ -127,14 +128,19 @@ export default async function AdminUsersPage({
         ) : (
           <EmptyState
             title="No users match this view."
-            detail="Adjust filters to inspect buyer, seller, and admin profiles."
+            detail="Adjust filters to inspect buyer, seller, facilitator, and admin profiles."
           />
         )}
       </section>
 
       <section className="mt-8 grid gap-5">
         {users
-          .filter((user) => user.role === "buyer" || user.role === "seller")
+          .filter(
+            (user) =>
+              user.role === "buyer" ||
+              user.role === "seller" ||
+              user.role === "facilitator",
+          )
           .map((user) => (
             <article
               key={user.id}
@@ -188,7 +194,7 @@ export default async function AdminUsersPage({
                         Carbon profile
                       </dt>
                       <dd className="mt-1 text-[#5b6a61]">
-                        {user.role === "buyer"
+                        {user.role === "buyer" || user.role === "facilitator"
                           ? `${user.annual_credit_demand ?? 0} credits demand · ${
                               user.preferred_project_types || "types not provided"
                             }`

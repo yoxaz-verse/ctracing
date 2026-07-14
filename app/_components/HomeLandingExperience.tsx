@@ -155,6 +155,41 @@ function CarbonBubbleField({ variant = "panel" }: { variant?: "hero" | "panel" }
   );
 }
 
+function HeroEcoBackground() {
+  return (
+    <div className="hero-eco-bg absolute inset-0" aria-hidden="true">
+      <span className="hero-eco-bg__canopy hero-eco-bg__canopy--one" />
+      <span className="hero-eco-bg__canopy hero-eco-bg__canopy--two" />
+      <span className="hero-eco-bg__leaf hero-eco-bg__leaf--one" />
+      <span className="hero-eco-bg__leaf hero-eco-bg__leaf--two" />
+      <span className="hero-eco-bg__leaf hero-eco-bg__leaf--three" />
+    </div>
+  );
+}
+
+function HeroFirstSlideMotion({ active }: { active: boolean }) {
+  return (
+    <div
+      className={`hero-first-motion ${active ? "is-visible" : ""}`}
+      aria-hidden="true"
+    >
+      <div className="hero-signal-panel">
+        <span className="hero-signal-panel__ring hero-signal-panel__ring--outer" />
+        <span className="hero-signal-panel__ring hero-signal-panel__ring--middle" />
+        <span className="hero-signal-panel__ring hero-signal-panel__ring--inner" />
+        <span className="hero-signal-panel__sweep" />
+        <span className="hero-signal-panel__node hero-signal-panel__node--one" />
+        <span className="hero-signal-panel__node hero-signal-panel__node--two" />
+        <span className="hero-signal-panel__node hero-signal-panel__node--three" />
+      </div>
+      <div className="hero-scroll-cue">
+        <span className="hero-scroll-cue__line" />
+        <span className="hero-scroll-cue__pulse" />
+      </div>
+    </div>
+  );
+}
+
 function SupplyConsole({
   summary,
   projects,
@@ -169,7 +204,7 @@ function SupplyConsole({
   const activeWorkflowStep = Math.max(0, activeChapter - 1);
 
   return (
-    <div className="hero-console hero-console--visible relative isolate rounded-[1.75rem] border border-white/12 bg-[var(--panel-dark)] p-3 text-white shadow-[0_34px_120px_rgba(16,32,22,0.34)]">
+    <div className="hero-console relative isolate rounded-[1.75rem] border border-white/12 bg-[var(--panel-dark)] p-3 text-white shadow-[0_34px_120px_rgba(16,32,22,0.34)]">
       <div className="relative isolate overflow-hidden rounded-[1.25rem] border border-white/10 bg-[#101711]">
         <CarbonBubbleField />
         <div className="relative z-10">
@@ -409,7 +444,7 @@ export function HomeLandingExperience({
     const swapTimer = window.setTimeout(() => {
       setDisplayChapter(activeChapter);
       window.requestAnimationFrame(() => setCopyVisible(true));
-    }, 140);
+    }, 180);
 
     return () => {
       window.clearTimeout(hideTimer);
@@ -486,8 +521,9 @@ export function HomeLandingExperience({
       </header>
       <section className="hero-scroll-stage">
         <div className="hero-sticky sticky top-0 overflow-hidden border-b border-[var(--border)] bg-[var(--surface-soft)]">
-          <div className="hero-grid-bg absolute inset-0" />
+          <HeroEcoBackground />
           <CarbonBubbleField variant="hero" />
+          <HeroFirstSlideMotion active={activeChapter === 0} />
 
           <div
             className={`hero-stage-content ${
@@ -545,14 +581,21 @@ export function HomeLandingExperience({
               </div>
             </div>
 
-            {showConsole ? (
+            <div
+              aria-hidden={!showConsole}
+              className={`hero-console-shell ${
+                showConsole
+                  ? "hero-console-shell--visible"
+                  : "hero-console-shell--hidden"
+              }`}
+            >
               <SupplyConsole
                 summary={summary}
                 projects={projects}
                 hasProjects={hasProjects}
                 activeChapter={activeChapter}
               />
-            ) : null}
+            </div>
           </div>
         </div>
 

@@ -35,10 +35,22 @@ export default async function VerificationPendingPage({
     .maybeSingle<Profile>();
 
   const fallbackRole = user.user_metadata?.role as UserRole | undefined;
-  const role = profile?.role ?? (fallbackRole === "seller" ? "seller" : "buyer");
+  const role =
+    profile?.role ??
+    (fallbackRole === "seller" || fallbackRole === "facilitator"
+      ? fallbackRole
+      : "buyer");
 
   if (profile?.email_verified_at) {
-    redirect(role === "seller" ? "/dashboard/seller" : "/dashboard/buyer");
+    redirect(
+      role === "admin"
+        ? "/dashboard/admin"
+        : role === "facilitator"
+          ? "/dashboard/facilitator"
+          : role === "seller"
+            ? "/dashboard/seller"
+            : "/dashboard/buyer",
+    );
   }
 
   let initialResendAvailableAt: string | null = null;
