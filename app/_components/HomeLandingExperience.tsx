@@ -167,12 +167,9 @@ function HeroEcoBackground() {
   );
 }
 
-function HeroFirstSlideMotion({ active }: { active: boolean }) {
+function HeroForestEstimator() {
   return (
-    <div
-      className={`hero-first-motion ${active ? "is-visible" : ""}`}
-      aria-hidden="true"
-    >
+    <>
       <div className="hero-forest-estimator">
         <div className="hero-forest-estimator__header">
           <span>Carbon predictor</span>
@@ -215,7 +212,7 @@ function HeroFirstSlideMotion({ active }: { active: boolean }) {
         <span className="hero-scroll-cue__line" />
         <span className="hero-scroll-cue__pulse" />
       </div>
-    </div>
+    </>
   );
 }
 
@@ -552,7 +549,6 @@ export function HomeLandingExperience({
         <div className="hero-sticky sticky top-0 overflow-hidden border-b border-[var(--border)] bg-[var(--surface-soft)]">
           <HeroEcoBackground />
           <CarbonBubbleField variant="hero" />
-          <HeroFirstSlideMotion active={activeChapter === 0} />
 
           <div
             className={`hero-stage-content ${
@@ -610,20 +606,30 @@ export function HomeLandingExperience({
               </div>
             </div>
 
-            <div
-              aria-hidden={!showConsole}
-              className={`hero-console-shell ${
-                showConsole
-                  ? "hero-console-shell--visible"
-                  : "hero-console-shell--hidden"
-              }`}
-            >
-              <SupplyConsole
-                summary={summary}
-                projects={projects}
-                hasProjects={hasProjects}
-                activeChapter={activeChapter}
-              />
+            <div className="hero-visual-stack" aria-hidden="true">
+              <div
+                className={`hero-visual-layer ${
+                  showConsole
+                    ? "hero-visual-layer--inactive"
+                    : "hero-visual-layer--active"
+                }`}
+              >
+                <HeroForestEstimator />
+              </div>
+              <div
+                className={`hero-visual-layer hero-console-shell ${
+                  showConsole
+                    ? "hero-visual-layer--active hero-console-shell--visible"
+                    : "hero-visual-layer--inactive hero-console-shell--hidden"
+                }`}
+              >
+                <SupplyConsole
+                  summary={summary}
+                  projects={projects}
+                  hasProjects={hasProjects}
+                  activeChapter={activeChapter}
+                />
+              </div>
             </div>
           </div>
         </div>
