@@ -36,21 +36,21 @@ export default function PublicEstimatorPage() {
       />
       <main className="min-h-screen bg-[var(--background)] text-[var(--text)]">
         <header className="border-b border-[var(--border)] bg-[var(--surface)]">
-          <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between lg:px-6">
-            <Link href="/" className="text-xl font-semibold text-[var(--brand)]">
+          <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-5 lg:px-6">
+            <Link href="/" className="shrink-0 text-lg font-semibold text-[var(--brand)] sm:text-xl">
               TeraTrace
             </Link>
-            <div className="flex flex-wrap items-center gap-3">
-              <ThemeToggle />
+            <div className="flex min-w-0 shrink-0 items-center gap-2">
+              <ThemeToggle variant="icon" />
               <Link
                 href="/login"
-                className="rounded-full border border-[var(--border)] px-4 py-2 text-sm font-semibold text-[var(--text)]"
+                className="whitespace-nowrap rounded-full border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--text)] transition hover:border-[var(--brand)] sm:px-3.5 sm:text-sm"
               >
                 Log in
               </Link>
               <Link
                 href="/signup"
-                className="rounded-full bg-[var(--brand)] px-5 py-2 text-sm font-semibold text-[var(--surface)]"
+                className="whitespace-nowrap rounded-full bg-[var(--brand)] px-3.5 py-1.5 text-xs font-semibold text-[var(--surface)] transition hover:bg-[var(--brand-hover)] sm:px-4 sm:text-sm"
               >
                 Create account
               </Link>

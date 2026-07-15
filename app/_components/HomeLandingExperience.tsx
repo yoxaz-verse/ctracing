@@ -671,26 +671,26 @@ export function HomeLandingExperience({
   );
 
   return (
-    <main className="min-h-screen bg-[var(--background)] text-[var(--text)] [--landing-header-height:132px] sm:[--landing-header-height:84px]">
+    <main className="min-h-screen bg-[var(--background)] text-[var(--text)] [--landing-header-height:66px] sm:[--landing-header-height:68px]">
       <header className="landing-header sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--surface-soft)]/90 shadow-sm backdrop-blur-md">
-        <nav className="landing-nav mx-auto flex max-w-7xl flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between lg:px-6">
-          <Link href="/" className="landing-brand flex items-center gap-3 text-xl font-semibold tracking-tight">
-            <span className="grid size-9 place-items-center rounded-lg bg-[var(--brand)] text-sm font-bold text-[var(--surface)]">
+        <nav className="landing-nav mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-5 lg:px-6">
+          <Link href="/" className="landing-brand flex min-w-0 items-center gap-2 text-lg font-semibold tracking-tight sm:gap-3 sm:text-xl">
+            <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[var(--brand)] text-xs font-bold text-[var(--surface)] sm:size-9 sm:text-sm">
               TT
             </span>
-            TeraTrace
+            <span className="truncate">TeraTrace</span>
           </Link>
-          <div className="landing-actions flex flex-wrap items-center gap-3">
-            <ThemeToggle />
+          <div className="landing-actions flex shrink-0 items-center gap-2">
+            <ThemeToggle variant="icon" />
             <Link
               href="/login"
-              className="landing-action rounded-full border border-[var(--border-strong)] px-4 py-2 text-sm font-medium text-[var(--text)] transition hover:border-[var(--brand)]"
+              className="landing-action whitespace-nowrap rounded-full border border-[var(--border-strong)] px-3 py-1.5 text-xs font-medium text-[var(--text)] transition hover:border-[var(--brand)] sm:px-3.5 sm:text-sm"
             >
               Log in
             </Link>
             <Link
               href="/signup"
-              className="landing-action rounded-full bg-[var(--brand)] px-5 py-2 text-sm font-semibold text-[var(--surface)] transition hover:bg-[var(--brand-hover)]"
+              className="landing-action whitespace-nowrap rounded-full bg-[var(--brand)] px-3.5 py-1.5 text-xs font-semibold text-[var(--surface)] transition hover:bg-[var(--brand-hover)] sm:px-4 sm:text-sm"
             >
               Create account
             </Link>
