@@ -855,6 +855,10 @@ textarea {
   min-height: 132svh;
 }
 
+.keyboard-scroll-target {
+  scroll-margin-top: var(--landing-header-height);
+}
+
 @media (min-width: 1024px) and (max-height: 820px) {
   .hero-sticky {
     min-height: 640px;

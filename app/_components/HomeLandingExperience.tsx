@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import type { HomepageProject, HomepageSummary } from "@/app/page";
 import { CarbonEstimator } from "@/app/_components/CarbonEstimator";
@@ -392,6 +392,20 @@ function RolePanel({
   );
 }
 
+function shouldIgnoreKeyboardNavigation(target: EventTarget | null) {
+  if (!(target instanceof Element)) {
+    return false;
+  }
+
+  return Boolean(
+    target.closest(
+      'a, button, input, textarea, select, [contenteditable="true"], [contenteditable=""], [role="button"], [role="link"]',
+    ),
+  );
+}
+
+const keyboardSectionCount = 5;
+
 export function HomeLandingExperience({
   summary,
   unavailable,
@@ -399,13 +413,89 @@ export function HomeLandingExperience({
   const [activeChapter, setActiveChapter] = useState(0);
   const [displayChapter, setDisplayChapter] = useState(0);
   const [copyVisible, setCopyVisible] = useState(true);
+  const heroStageRef = useRef<HTMLElement | null>(null);
   const stepsRef = useRef<Array<HTMLDivElement | null>>([]);
+  const sectionRefs = useRef<Array<HTMLElement | null>>([]);
   const scrollTargetRef = useRef<number | null>(null);
   const scrollLockUntilRef = useRef(0);
+  const keyboardLockUntilRef = useRef(0);
+  const keyboardNavigationActiveRef = useRef(false);
+  const keyboardTargetIndexRef = useRef(0);
   const projects = summary.latest_projects;
   const hasProjects = projects.length > 0;
   const active = chapters[displayChapter] ?? chapters[0];
   const showConsole = activeChapter > 0;
+
+  const getScrollBehavior = useCallback((): ScrollBehavior => {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? "auto"
+      : "smooth";
+  }, []);
+
+  const getCurrentKeyboardTargetIndex = useCallback(() => {
+    const headerHeight =
+      document.querySelector(".landing-header")?.getBoundingClientRect().height ?? 0;
+    const heroRect = heroStageRef.current?.getBoundingClientRect();
+    const firstSectionRect = sectionRefs.current[0]?.getBoundingClientRect();
+    const firstSectionHasReachedHeader =
+      firstSectionRect &&
+      firstSectionRect.top <= Math.max(headerHeight + 24, window.innerHeight * 0.18);
+
+    if (
+      heroRect &&
+      !firstSectionHasReachedHeader &&
+      heroRect.top <= headerHeight + 4 &&
+      heroRect.bottom > headerHeight + 4
+    ) {
+      return activeChapter;
+    }
+
+    const sectionTargetLine = headerHeight + 8;
+    const bestSection = sectionRefs.current.reduce(
+      (current, section, index) => {
+        if (!section) {
+          return current;
+        }
+
+        const rect = section.getBoundingClientRect();
+        const distance = Math.abs(rect.top - sectionTargetLine);
+
+        return distance < current.distance ? { index, distance } : current;
+      },
+      { index: 0, distance: Number.POSITIVE_INFINITY },
+    );
+
+    return chapters.length + bestSection.index;
+  }, [activeChapter]);
+
+  const scrollToKeyboardTarget = useCallback((index: number) => {
+    const targetCount = chapters.length + keyboardSectionCount;
+    const targetIndex = Math.min(Math.max(index, 0), targetCount - 1);
+    const behavior = getScrollBehavior();
+    const now = window.performance.now();
+    const lockDuration = behavior === "smooth" ? 760 : 180;
+
+    keyboardLockUntilRef.current = now + lockDuration;
+    keyboardNavigationActiveRef.current = true;
+    keyboardTargetIndexRef.current = targetIndex;
+
+    if (targetIndex < chapters.length) {
+      scrollTargetRef.current = targetIndex;
+      scrollLockUntilRef.current = now + lockDuration;
+      setActiveChapter(targetIndex);
+
+      stepsRef.current[targetIndex]?.scrollIntoView({
+        behavior,
+        block: "center",
+      });
+      return;
+    }
+
+    sectionRefs.current[targetIndex - chapters.length]?.scrollIntoView({
+      behavior,
+      block: "start",
+    });
+  }, [getScrollBehavior]);
 
   useEffect(() => {
     let frame = 0;
@@ -478,6 +568,71 @@ export function HomeLandingExperience({
     };
   }, [activeChapter, displayChapter]);
 
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (
+        event.key !== "ArrowDown" &&
+        event.key !== "PageDown" &&
+        event.key !== "ArrowUp" &&
+        event.key !== "PageUp"
+      ) {
+        return;
+      }
+
+      if (shouldIgnoreKeyboardNavigation(event.target)) {
+        return;
+      }
+
+      const now = window.performance.now();
+      if (now < keyboardLockUntilRef.current) {
+        event.preventDefault();
+        return;
+      }
+
+      const direction =
+        event.key === "ArrowDown" || event.key === "PageDown" ? 1 : -1;
+      const currentTargetIndex = keyboardNavigationActiveRef.current
+        ? keyboardTargetIndexRef.current
+        : getCurrentKeyboardTargetIndex();
+      const targetCount = chapters.length + keyboardSectionCount;
+      const nextTargetIndex = Math.min(
+        Math.max(currentTargetIndex + direction, 0),
+        targetCount - 1,
+      );
+
+      if (nextTargetIndex === currentTargetIndex) {
+        return;
+      }
+
+      event.preventDefault();
+      scrollToKeyboardTarget(nextTargetIndex);
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [getCurrentKeyboardTargetIndex, scrollToKeyboardTarget]);
+
+  useEffect(() => {
+    function resetKeyboardNavigationState() {
+      keyboardNavigationActiveRef.current = false;
+    }
+
+    window.addEventListener("wheel", resetKeyboardNavigationState, { passive: true });
+    window.addEventListener("touchstart", resetKeyboardNavigationState, {
+      passive: true,
+    });
+    window.addEventListener("pointerdown", resetKeyboardNavigationState);
+
+    return () => {
+      window.removeEventListener("wheel", resetKeyboardNavigationState);
+      window.removeEventListener("touchstart", resetKeyboardNavigationState);
+      window.removeEventListener("pointerdown", resetKeyboardNavigationState);
+    };
+  }, []);
+
   function handleChapterClick(index: number) {
     scrollTargetRef.current = index;
     scrollLockUntilRef.current = window.performance.now() + 700;
@@ -545,7 +700,7 @@ export function HomeLandingExperience({
           </div>
         </nav>
       </header>
-      <section className="hero-scroll-stage">
+      <section ref={heroStageRef} className="hero-scroll-stage">
         <div className="hero-sticky sticky top-0 overflow-hidden border-b border-[var(--border)] bg-[var(--surface-soft)]">
           <HeroEcoBackground />
           <CarbonBubbleField variant="hero" />
@@ -648,7 +803,12 @@ export function HomeLandingExperience({
         </div>
       </section>
 
-      <section className="border-b border-[var(--border)] bg-[var(--background)]">
+      <section
+        ref={(node) => {
+          sectionRefs.current[0] = node;
+        }}
+        className="keyboard-scroll-target border-b border-[var(--border)] bg-[var(--background)]"
+      >
         <div className="mx-auto max-w-7xl px-5 py-12 lg:px-6">
           <div className="grid gap-8 lg:grid-cols-[0.75fr_1.25fr] lg:items-end">
             <div>
@@ -679,7 +839,12 @@ export function HomeLandingExperience({
         </div>
       </section>
 
-      <section className="border-b border-[var(--border)] bg-[var(--surface-soft)]">
+      <section
+        ref={(node) => {
+          sectionRefs.current[1] = node;
+        }}
+        className="keyboard-scroll-target border-b border-[var(--border)] bg-[var(--surface-soft)]"
+      >
         <div className="mx-auto max-w-7xl px-5 py-16 lg:px-6">
           <div className="mb-8 grid gap-5 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
             <div>
@@ -707,7 +872,12 @@ export function HomeLandingExperience({
         </div>
       </section>
 
-      <section className="bg-[var(--surface)]">
+      <section
+        ref={(node) => {
+          sectionRefs.current[2] = node;
+        }}
+        className="keyboard-scroll-target bg-[var(--surface)]"
+      >
         <div className="mx-auto max-w-7xl px-5 py-16 lg:px-6">
           <div className="grid gap-10 lg:grid-cols-[0.42fr_1fr] lg:items-start">
             <div>
@@ -745,7 +915,12 @@ export function HomeLandingExperience({
         </div>
       </section>
 
-      <section className="border-y border-[var(--border)] bg-[var(--surface-soft)]">
+      <section
+        ref={(node) => {
+          sectionRefs.current[3] = node;
+        }}
+        className="keyboard-scroll-target border-y border-[var(--border)] bg-[var(--surface-soft)]"
+      >
         <div className="mx-auto max-w-7xl px-5 py-16 lg:px-6">
           <div className="grid gap-5 lg:grid-cols-3">
             {rolePanels.map((panel, index) => (
@@ -755,7 +930,12 @@ export function HomeLandingExperience({
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-6 px-5 py-16 lg:grid-cols-[1fr_0.42fr] lg:px-6">
+      <section
+        ref={(node) => {
+          sectionRefs.current[4] = node;
+        }}
+        className="keyboard-scroll-target mx-auto grid max-w-7xl gap-6 px-5 py-16 lg:grid-cols-[1fr_0.42fr] lg:px-6"
+      >
         <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm md:p-8">
           <div className="flex flex-col gap-3 border-b border-[var(--border-muted)] pb-6 md:flex-row md:items-end md:justify-between">
             <div>
