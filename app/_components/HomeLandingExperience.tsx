@@ -399,7 +399,7 @@ function shouldIgnoreKeyboardNavigation(target: EventTarget | null) {
 
   return Boolean(
     target.closest(
-      'a, button, input, textarea, select, [contenteditable="true"], [contenteditable=""], [role="button"], [role="link"]',
+      'input, textarea, select, [contenteditable="true"], [contenteditable=""], [role="textbox"], [role="combobox"], [role="listbox"], [role="slider"]',
     ),
   );
 }
@@ -418,7 +418,6 @@ export function HomeLandingExperience({
   const sectionRefs = useRef<Array<HTMLElement | null>>([]);
   const scrollTargetRef = useRef<number | null>(null);
   const scrollLockUntilRef = useRef(0);
-  const keyboardLockUntilRef = useRef(0);
   const keyboardNavigationActiveRef = useRef(false);
   const keyboardTargetIndexRef = useRef(0);
   const projects = summary.latest_projects;
@@ -475,7 +474,6 @@ export function HomeLandingExperience({
     const now = window.performance.now();
     const lockDuration = behavior === "smooth" ? 760 : 180;
 
-    keyboardLockUntilRef.current = now + lockDuration;
     keyboardNavigationActiveRef.current = true;
     keyboardTargetIndexRef.current = targetIndex;
 
@@ -579,13 +577,12 @@ export function HomeLandingExperience({
         return;
       }
 
-      if (shouldIgnoreKeyboardNavigation(event.target)) {
+      if (event.repeat) {
+        event.preventDefault();
         return;
       }
 
-      const now = window.performance.now();
-      if (now < keyboardLockUntilRef.current) {
-        event.preventDefault();
+      if (shouldIgnoreKeyboardNavigation(event.target)) {
         return;
       }
 
@@ -634,6 +631,8 @@ export function HomeLandingExperience({
   }, []);
 
   function handleChapterClick(index: number) {
+    keyboardNavigationActiveRef.current = true;
+    keyboardTargetIndexRef.current = index;
     scrollTargetRef.current = index;
     scrollLockUntilRef.current = window.performance.now() + 700;
     setActiveChapter(index);
