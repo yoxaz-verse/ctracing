@@ -357,7 +357,7 @@ textarea {
 .hero-visual-layer {
   position: relative;
   grid-area: 1 / 1;
-  width: min(100%, 36rem);
+  width: min(100%, 32rem);
   justify-self: end;
   opacity: 0;
   pointer-events: none;
@@ -746,7 +746,9 @@ textarea {
 }
 
 .hero-console {
-  max-height: calc(100svh - var(--landing-header-height) - 40px);
+  width: 100%;
+  max-width: 32rem;
+  max-height: clamp(34rem, calc(100svh - var(--landing-header-height) - 72px), 42rem);
   overflow: hidden;
   transform: translate3d(0, 0, 0) scale(1);
   transition:
@@ -756,24 +758,28 @@ textarea {
 
 .hero-console-shell {
   min-width: 0;
-  will-change: opacity;
+  will-change: opacity, transform, filter;
   transition:
-    opacity 460ms cubic-bezier(0.22, 1, 0.36, 1),
-    transform 460ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 620ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 620ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 620ms cubic-bezier(0.22, 1, 0.36, 1),
     visibility 0s linear 460ms;
 }
 
 .hero-console-shell--hidden {
+  filter: blur(8px);
   visibility: hidden;
   opacity: 0;
   pointer-events: none;
-  transform: scale(0.992);
+  transform: translate3d(0, 18px, 0) scale(0.966);
 }
 
 .hero-console-shell--visible {
+  filter: blur(0);
   visibility: visible;
   opacity: 1;
-  transform: scale(1);
+  transform: translate3d(0, 0, 0) scale(1);
+  transition-delay: 90ms, 90ms, 90ms, 0s;
 }
 
 .hero-console:hover {
@@ -808,6 +814,14 @@ textarea {
 .hero-market-signals.is-visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+.hero-market-signal {
+  min-height: 2.35rem;
+}
+
+.hero-market-signal span {
+  line-height: 1.2;
 }
 
 .chapter-tab {
@@ -871,7 +885,16 @@ textarea {
   }
 
   .hero-title {
-    font-size: clamp(3.5rem, 5vw, 5.25rem);
+    font-size: clamp(3.1rem, 4.6vw, 4.75rem);
+  }
+
+  .hero-visual-layer,
+  .hero-console {
+    max-width: 30rem;
+  }
+
+  .hero-visual-layer {
+    width: min(100%, 30rem);
   }
 
   .chapter-tab {
@@ -880,7 +903,7 @@ textarea {
   }
 
   .hero-console {
-    max-height: calc(100svh - var(--landing-header-height) - 22px);
+    max-height: clamp(31rem, calc(100svh - var(--landing-header-height) - 24px), 41rem);
   }
 }
 
@@ -947,6 +970,7 @@ textarea {
   }
 
   .hero-console {
+    max-width: none;
     max-height: none;
   }
 

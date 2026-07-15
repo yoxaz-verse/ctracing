@@ -104,8 +104,8 @@ function formatPrice(value: number) {
 
 function ConsoleMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-white/10 bg-white/[0.06] px-4 py-3">
-      <p className="text-lg font-semibold text-white">{value}</p>
+    <div className="rounded-md border border-white/10 bg-white/[0.06] px-3 py-2.5">
+      <p className="text-base font-semibold text-white">{value}</p>
       <p className="mt-1 text-xs uppercase tracking-[0.14em] text-white/50">
         {label}
       </p>
@@ -230,102 +230,100 @@ function SupplyConsole({
   const activeWorkflowStep = Math.max(0, activeChapter - 1);
 
   return (
-    <div className="hero-console relative isolate rounded-[1.75rem] border border-white/12 bg-[var(--panel-dark)] p-3 text-white shadow-[0_34px_120px_rgba(16,32,22,0.34)]">
-      <div className="relative isolate overflow-hidden rounded-[1.25rem] border border-white/10 bg-[#101711]">
+    <div className="hero-console relative isolate rounded-[1.35rem] border border-white/12 bg-[var(--panel-dark)] p-2 text-white shadow-[0_34px_120px_rgba(16,32,22,0.34)]">
+      <div className="relative isolate overflow-hidden rounded-[1rem] border border-white/10 bg-[#101711]">
         <CarbonBubbleField />
         <div className="relative z-10">
-        <div className="border-b border-white/10 bg-white/[0.035] p-5 sm:p-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="text-sm text-white/55">Marketplace console</p>
-              <h2 className="mt-1 text-2xl font-semibold tracking-tight">
-                Live supply board
-              </h2>
+          <div className="border-b border-white/10 bg-white/[0.035] p-4 sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-xs text-white/55">Marketplace console</p>
+                <h2 className="mt-1 text-xl font-semibold tracking-tight">
+                  Live supply board
+                </h2>
+              </div>
+              <span className="w-fit rounded-full bg-[var(--accent)] px-3 py-1 text-xs font-semibold text-[var(--accent-foreground)]">
+                {hasProjects ? "Database live" : "Awaiting listings"}
+              </span>
             </div>
-            <span className="w-fit rounded-full bg-[var(--accent)] px-3 py-1 text-xs font-semibold text-[var(--accent-foreground)]">
-              {hasProjects ? "Database live" : "Awaiting listings"}
-            </span>
+            <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+              <ConsoleMetric label="Credits" value={formatCredits(summary.total_credits)} />
+              <ConsoleMetric label="Projects" value={formatCredits(summary.project_count)} />
+              <ConsoleMetric label="Regions" value={formatCredits(summary.region_count)} />
+              <ConsoleMetric label="Statuses" value={formatCredits(summary.verification_status_count)} />
+            </div>
           </div>
-          <div className="mt-6 grid gap-3 sm:grid-cols-2">
-            <ConsoleMetric label="Credits" value={formatCredits(summary.total_credits)} />
-            <ConsoleMetric label="Projects" value={formatCredits(summary.project_count)} />
-            <ConsoleMetric label="Regions" value={formatCredits(summary.region_count)} />
-            <ConsoleMetric label="Statuses" value={formatCredits(summary.verification_status_count)} />
-          </div>
-        </div>
 
-        <div className="grid gap-3 p-5 sm:p-6">
-          {hasProjects ? (
-            projects.slice(0, 3).map((project, index) => (
-              <article
-                key={`${project.project_name}-${project.location}`}
-                className={`hero-project-row rounded-2xl border border-white/10 bg-white/[0.06] p-4 ${
-                  activeChapter > 0 ? "is-lit" : ""
-                }`}
-                style={{ transitionDelay: `${index * 70}ms` }}
-              >
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">
-                      {project.methodology}
+          <div className="grid gap-2.5 p-4 sm:p-5">
+            {hasProjects ? (
+              projects.slice(0, 2).map((project, index) => (
+                <article
+                  key={`${project.project_name}-${project.location}`}
+                  className={`hero-project-row rounded-xl border border-white/10 bg-white/[0.06] p-3.5 ${
+                    activeChapter > 0 ? "is-lit" : ""
+                  }`}
+                  style={{ transitionDelay: `${index * 70}ms` }}
+                >
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">
+                        {project.methodology}
+                      </p>
+                      <h3 className="mt-1.5 text-sm font-semibold text-white">
+                        {project.project_name}
+                      </h3>
+                      <p className="mt-1 text-sm text-white/58">{project.location}</p>
+                    </div>
+                    <p className="whitespace-nowrap text-sm font-semibold text-white">
+                      {formatCredits(project.available_credits)} credits
                     </p>
-                    <h3 className="mt-2 font-semibold text-white">
-                      {project.project_name}
-                    </h3>
-                    <p className="mt-1 text-sm text-white/58">{project.location}</p>
                   </div>
-                  <p className="whitespace-nowrap text-sm font-semibold text-white">
-                    {formatCredits(project.available_credits)} credits
-                  </p>
-                </div>
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3 text-sm text-white/65">
-                  <span>{project.verification_status}</span>
-                  <span>{formatPrice(project.price_per_credit)}/credit</span>
-                </div>
-              </article>
-            ))
-          ) : (
-            <div className="rounded-2xl border border-dashed border-white/20 bg-white/[0.05] p-6">
-              <p className="text-lg font-semibold">No live projects listed yet.</p>
-              <p className="mt-3 text-sm leading-6 text-white/65">
-                When a verified seller creates a project listing, this console
-                will show project previews and marketplace totals from Supabase.
-              </p>
-            </div>
-          )}
-        </div>
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-2.5 text-xs text-white/65">
+                    <span>{project.verification_status}</span>
+                    <span>{formatPrice(project.price_per_credit)}/credit</span>
+                  </div>
+                </article>
+              ))
+            ) : (
+              <div className="rounded-xl border border-dashed border-white/20 bg-white/[0.05] p-4">
+                <p className="font-semibold">No live projects listed yet.</p>
+                <p className="mt-2 text-sm leading-6 text-white/65">
+                  When a verified seller creates a project listing, this console
+                  will show project previews and marketplace totals from Supabase.
+                </p>
+              </div>
+            )}
+          </div>
 
-        <div className="grid gap-3 border-t border-white/10 bg-white/[0.025] p-5 sm:grid-cols-3 sm:p-6">
-          {workflowSteps.map((step, index) => (
-            <div
-              key={step.label}
-              className={`rounded-2xl border p-4 transition ${
-                activeWorkflowStep === index
-                  ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-foreground)]"
-                  : "border-white/10 bg-white/[0.04] text-white/68"
-              }`}
-            >
-              <p className="text-xs font-semibold uppercase tracking-[0.16em]">
-                {step.label}
-              </p>
-              <p className="mt-2 text-sm font-semibold">{step.title}</p>
-            </div>
-          ))}
-        </div>
+          <div className="grid gap-2.5 border-t border-white/10 bg-white/[0.025] p-4 sm:grid-cols-3 sm:p-5">
+            {workflowSteps.map((step, index) => (
+              <div
+                key={step.label}
+                className={`rounded-xl border p-3 transition ${
+                  activeWorkflowStep === index
+                    ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-foreground)]"
+                    : "border-white/10 bg-white/[0.04] text-white/68"
+                }`}
+              >
+                <p className="text-xs font-semibold uppercase tracking-[0.16em]">
+                  {step.label}
+                </p>
+                <p className="mt-2 text-xs font-semibold leading-5">{step.title}</p>
+              </div>
+            ))}
+          </div>
 
-        <div
-          className="hero-market-signals is-visible grid gap-3 border-t border-white/10 p-5 sm:grid-cols-3 sm:p-6"
-        >
-          {["Verification review", "Demand signals", "Match pipeline"].map((item) => (
-            <div
-              key={item}
-              className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.055] px-3 py-2 text-sm"
-            >
-              <span className="text-white/70">{item}</span>
-              <span className="font-semibold text-[var(--accent)]">Ready</span>
-            </div>
-          ))}
-        </div>
+          <div className="hero-market-signals is-visible grid gap-2.5 border-t border-white/10 p-4 sm:grid-cols-3 sm:p-5">
+            {["Verification review", "Demand signals", "Match pipeline"].map((item) => (
+              <div
+                key={item}
+                className="hero-market-signal flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.055] px-3 py-2 text-xs"
+              >
+                <span className="min-w-0 text-white/70">{item}</span>
+                <span className="font-semibold text-[var(--accent)]">Ready</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

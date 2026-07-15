@@ -211,7 +211,7 @@ export default async function AdminDashboardPage() {
           </div>
         </div>
 
-        <aside className="rounded-3xl bg-[#e3eadf] p-6 ring-1 ring-[#ccd8c6]">
+        <aside className="rounded-3xl bg-[#e3eadf] p-6 ring-1 ring-[#ccd8c6] xl:h-full xl:self-stretch">
           <h2 className="text-2xl font-semibold">Buyer interests</h2>
           {interests.length ? (
             <div className="mt-5 space-y-3">
