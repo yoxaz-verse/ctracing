@@ -18,7 +18,7 @@ function Skeleton({
 
 function MetricSkeleton() {
   return (
-    <article className="rounded-3xl bg-[var(--surface)] p-6 shadow-sm ring-1 ring-[var(--border-muted)]">
+    <article className="rounded-2xl bg-[var(--surface)] p-5 shadow-sm ring-1 ring-[var(--border-muted)] md:rounded-3xl md:p-6">
       <Skeleton className="h-3 w-24 rounded-full bg-[var(--surface-muted)]" />
       <Skeleton className="mt-4 h-8 w-28 rounded-full bg-[var(--surface-positive)]" />
       <Skeleton className="mt-4 h-3 w-full rounded-full bg-[var(--surface-subtle)]" />
@@ -54,7 +54,7 @@ export default function DashboardLoading({
       className="dashboard-loading-dark min-h-screen bg-[var(--background)] text-[var(--text)]"
       aria-busy="true"
     >
-      <header className="border-b border-[var(--border)] bg-[var(--surface)]">
+      <header className="hidden border-b border-[var(--border)] bg-[var(--surface)] md:block">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-5 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-xl font-semibold text-[var(--brand)]">TeraTrace</p>
@@ -71,7 +71,25 @@ export default function DashboardLoading({
           </div>
         </div>
       </header>
-      <div className="border-b border-[var(--border)] bg-[var(--surface-soft)]">
+      <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_94%,transparent)] px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] shadow-sm backdrop-blur-xl md:hidden">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-lg font-semibold leading-tight text-[var(--brand)]">
+              TeraTrace
+            </p>
+            <Skeleton className="mt-2 h-3.5 w-40 max-w-full rounded-full bg-[var(--surface-subtle)]" />
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <Skeleton className="h-10 w-20 rounded-full bg-[var(--surface-subtle)]" />
+            <Skeleton className="h-10 w-12 rounded-full bg-[var(--surface-muted)]" />
+          </div>
+        </div>
+        <div className="mt-3 flex items-center gap-2 overflow-hidden">
+          <Skeleton className="h-7 w-36 shrink-0 rounded-full bg-[var(--surface-positive)]" />
+          <Skeleton className="h-7 w-32 shrink-0 rounded-full bg-[var(--surface-muted)]" />
+        </div>
+      </header>
+      <div className="hidden border-b border-[var(--border)] bg-[var(--surface-soft)] md:block">
         <div className="mx-auto flex max-w-7xl gap-2 overflow-hidden px-6 py-3">
           <Skeleton className="h-10 w-24 shrink-0 rounded-full bg-[var(--surface)]" />
           <Skeleton className="h-10 w-24 shrink-0 rounded-full bg-[var(--surface)]" />
@@ -81,7 +99,7 @@ export default function DashboardLoading({
         </div>
       </div>
       <section
-        className="mx-auto max-w-7xl px-6 py-8"
+        className="mx-auto max-w-7xl px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-5 sm:px-5 md:px-6 md:py-8"
         role="status"
         aria-live="polite"
         aria-label={title}
@@ -97,7 +115,7 @@ export default function DashboardLoading({
             </h1>
             <p className="mt-4 max-w-3xl leading-7 text-[var(--text-muted)]">{subtitle}</p>
           </div>
-          <div className="rounded-3xl bg-[var(--surface)] p-5 shadow-sm ring-1 ring-[var(--border-muted)]">
+          <div className="rounded-2xl bg-[var(--surface)] p-5 shadow-sm ring-1 ring-[var(--border-muted)] md:rounded-3xl">
             <div className="flex items-center gap-4">
               <CarbonCreditLoader compact />
               <div className="min-w-0 flex-1">
@@ -121,7 +139,7 @@ export default function DashboardLoading({
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[0.78fr_0.42fr]">
           <div className="space-y-6">
-            <section className="rounded-3xl bg-[var(--surface)] p-6 shadow-sm ring-1 ring-[var(--border-muted)]">
+            <section className="rounded-2xl bg-[var(--surface)] p-5 shadow-sm ring-1 ring-[var(--border-muted)] md:rounded-3xl md:p-6">
               <div className="border-b border-[var(--border-muted)] pb-5">
                 <Skeleton className="h-7 w-48 rounded-full bg-[var(--surface-muted)]" />
                 <Skeleton className="mt-3 h-4 w-10/12 rounded-full bg-[var(--surface-subtle)]" />
@@ -133,7 +151,7 @@ export default function DashboardLoading({
               </div>
             </section>
 
-            <section className="rounded-3xl bg-[var(--surface)] p-6 shadow-sm ring-1 ring-[var(--border-muted)]">
+            <section className="rounded-2xl bg-[var(--surface)] p-5 shadow-sm ring-1 ring-[var(--border-muted)] md:rounded-3xl md:p-6">
               <Skeleton className="h-7 w-52 rounded-full bg-[var(--surface-muted)]" />
               <Skeleton className="mt-3 h-4 w-8/12 rounded-full bg-[var(--surface-subtle)]" />
               <div className="mt-5 grid gap-4 md:grid-cols-2">
@@ -146,7 +164,7 @@ export default function DashboardLoading({
           </div>
 
           <aside className="space-y-6">
-            <section className="rounded-3xl bg-[var(--panel-dark)] p-6 text-[var(--foreground)] shadow-sm">
+            <section className="rounded-2xl bg-[var(--panel-dark)] p-5 text-[var(--foreground)] shadow-sm md:rounded-3xl md:p-6">
               <div className="flex items-center gap-4">
                 <CarbonCreditLoader compact />
                 <div className="flex-1">
@@ -158,7 +176,7 @@ export default function DashboardLoading({
               <Skeleton className="mt-2 h-3 w-9/12 rounded-full bg-white/18" />
             </section>
 
-            <section className="rounded-3xl bg-[var(--surface)] p-6 shadow-sm ring-1 ring-[var(--border-muted)]">
+            <section className="rounded-2xl bg-[var(--surface)] p-5 shadow-sm ring-1 ring-[var(--border-muted)] md:rounded-3xl md:p-6">
               <Skeleton className="h-6 w-40 rounded-full bg-[var(--surface-muted)]" />
               <div className="mt-5 space-y-4">
                 <div className="flex items-center justify-between gap-4">
@@ -178,6 +196,12 @@ export default function DashboardLoading({
           </aside>
         </div>
       </section>
+      <div className="dashboard-mobile-tabs fixed inset-x-0 bottom-0 z-40 flex gap-2 overflow-hidden border-t border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_92%,transparent)] px-3 pb-[calc(0.7rem+env(safe-area-inset-bottom))] pt-2.5 shadow-[0_-18px_40px_rgba(23,32,27,0.12)] backdrop-blur-xl md:hidden">
+        <Skeleton className="h-[3.55rem] min-w-[4.7rem] flex-1 rounded-2xl bg-[var(--surface-positive)]" />
+        <Skeleton className="h-[3.55rem] min-w-[4.7rem] flex-1 rounded-2xl bg-[var(--surface-subtle)]" />
+        <Skeleton className="h-[3.55rem] min-w-[4.7rem] flex-1 rounded-2xl bg-[var(--surface-subtle)]" />
+        <Skeleton className="h-[3.55rem] min-w-[4.7rem] flex-1 rounded-2xl bg-[var(--surface-subtle)]" />
+      </div>
     </main>
   );
 }

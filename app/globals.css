@@ -1224,6 +1224,34 @@ textarea::placeholder {
   --brand-soft: #a8cbb2;
 }
 
+.dashboard-mobile-tabs {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.dashboard-mobile-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .dashboard-app-content :is(section, article, form, aside).rounded-3xl {
+    border-radius: 1rem;
+  }
+
+  .dashboard-app-content :is(section, article, form, aside).p-6 {
+    padding: 1.25rem;
+  }
+
+  .dashboard-app-content :is(section, article, form, aside).shadow-sm {
+    box-shadow: 0 12px 34px color-mix(in srgb, var(--text) 8%, transparent);
+  }
+
+  .dashboard-app-content h1 {
+    font-size: clamp(1.75rem, 8vw, 2.25rem);
+    line-height: 1.08;
+  }
+}
+
 .carbon-loader {
   overflow: visible;
   color: var(--text);
