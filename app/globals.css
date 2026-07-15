@@ -1206,6 +1206,24 @@ textarea::placeholder {
   color: var(--text-muted);
 }
 
+.dashboard-loading-dark {
+  --background: #101612;
+  --foreground: #eef6ed;
+  --surface: #18211b;
+  --surface-soft: #0f1712;
+  --surface-muted: #202d24;
+  --surface-subtle: #1b261f;
+  --surface-positive: #1d3225;
+  --panel-dark: #070b08;
+  --border: #2d3b31;
+  --border-muted: #2b382f;
+  --text: #eef6ed;
+  --text-heading: #f7fff6;
+  --text-muted: #b6c6ba;
+  --brand: #8bd09b;
+  --brand-soft: #a8cbb2;
+}
+
 .carbon-loader {
   overflow: visible;
   color: var(--text);
