@@ -3,8 +3,16 @@ import { logIn } from "@/app/auth/actions";
 import { PendingButton } from "@/app/_components/PendingButton";
 import { PasswordField } from "@/app/_components/PasswordField";
 import { ThemeToggle } from "@/app/_components/ThemeToggle";
+import { pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = pageMetadata({
+  title: "Log In to TeraTrace",
+  description:
+    "Log in to a TeraTrace carbon credit marketplace workspace for buyers, sellers, facilitators, and platform teams in India.",
+  path: "/login",
+});
 
 export default async function LoginPage({
   searchParams,

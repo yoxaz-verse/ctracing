@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
 type Theme = "light" | "dark";
 
 const storageKey = "teratrace-theme";
+const themeChangeEvent = "teratrace-theme-change";
 
 function getInitialTheme(): Theme {
   if (typeof window === "undefined") {
@@ -21,13 +22,37 @@ function getInitialTheme(): Theme {
     : "light";
 }
 
+function subscribeTheme(callback: () => void) {
+  window.addEventListener("storage", callback);
+  window.addEventListener(themeChangeEvent, callback);
+
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener(themeChangeEvent, callback);
+  };
+}
+
+function getServerTheme(): Theme {
+  return "light";
+}
+
+function saveTheme(theme: Theme) {
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = theme;
+  window.localStorage.setItem(storageKey, theme);
+  window.dispatchEvent(new Event(themeChangeEvent));
+}
+
 export function ThemeToggle({ className = "" }: { className?: string }) {
-  const [theme, setTheme] = useState<Theme>(() => getInitialTheme());
+  const theme = useSyncExternalStore(
+    subscribeTheme,
+    getInitialTheme,
+    getServerTheme,
+  );
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     document.documentElement.style.colorScheme = theme;
-    window.localStorage.setItem(storageKey, theme);
   }, [theme]);
 
   return (
@@ -40,7 +65,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
         aria-label="Use light mode"
         aria-pressed={theme === "light"}
         className="grid size-10 place-items-center rounded-full transition cursor-pointer"
-        onClick={() => setTheme("light")}
+        onClick={() => saveTheme("light")}
         title="Light mode"
         type="button"
       >
@@ -69,7 +94,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
         aria-label="Use dark mode"
         aria-pressed={theme === "dark"}
         className="grid size-10 place-items-center rounded-full transition cursor-pointer"
-        onClick={() => setTheme("dark")}
+        onClick={() => saveTheme("dark")}
         title="Dark mode"
         type="button"
       >

@@ -1,8 +1,16 @@
 import Link from "next/link";
 import { verifyEmailToken } from "@/lib/email-verification";
 import { ThemeToggle } from "@/app/_components/ThemeToggle";
+import { pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = pageMetadata({
+  title: "Verify TeraTrace Email",
+  description:
+    "Verify the email address for a TeraTrace carbon credit marketplace account.",
+  path: "/verify-email",
+});
 
 export default async function VerifyEmailPage({
   searchParams,

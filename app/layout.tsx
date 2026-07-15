@@ -1,13 +1,56 @@
 import type { Metadata } from "next";
+import {
+  defaultSeoDescription,
+  defaultSeoTitle,
+  seoKeywords,
+  siteName,
+  siteOrigin,
+} from "@/lib/seo";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "TeraTrace | Carbon Credit Marketplace",
-  description:
-    "A role-based carbon credit platform for buyers, project developers, and sustainability teams.",
+  metadataBase: new URL(siteOrigin),
+  applicationName: siteName,
+  title: {
+    default: defaultSeoTitle,
+    template: `%s | ${siteName}`,
+  },
+  description: defaultSeoDescription,
+  keywords: seoKeywords,
+  authors: [{ name: siteName }],
+  creator: siteName,
+  publisher: siteName,
+  category: "Carbon credit marketplace",
+  alternates: {
+    canonical: "/",
+  },
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
+  },
+  openGraph: {
+    title: defaultSeoTitle,
+    description: defaultSeoDescription,
+    url: "/",
+    siteName,
+    type: "website",
+    locale: "en_IN",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: defaultSeoTitle,
+    description: defaultSeoDescription,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
 };
 

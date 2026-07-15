@@ -15,9 +15,9 @@ type HomeLandingExperienceProps = {
 const chapters = [
   {
     eyebrow: "Carbon credit marketplace",
-    title: "Trusted visibility into carbon credit supply.",
-    body: "TeraTrace helps buyers, project sellers, and facilitators understand live carbon credit supply, demand signals, and verification context from one clean marketplace layer.",
-    proof: "Clear marketplace context before role-specific workflows begin.",
+    title: "India-first visibility into carbon credit supply.",
+    body: "TeraTrace helps carbon credit buyers, project sellers, and facilitators in India understand live supply, demand signals, and verification context from one clean marketplace layer.",
+    proof: "Clear India carbon marketplace context before role-specific workflows begin.",
   },
   {
     eyebrow: "For project sellers",
@@ -826,8 +826,9 @@ export function HomeLandingExperience({
               </p>
             ) : (
               <p className="text-sm leading-6 text-[var(--text-muted)]">
-                Updated directly from seller project listings, then structured
-                for high-signal review by buyers and facilitators.
+                Updated directly from seller project listings in the carbon
+                credit marketplace, then structured for high-signal review by
+                buyers and facilitators in India.
               </p>
             )}
           </div>
@@ -852,7 +853,8 @@ export function HomeLandingExperience({
                 Try the estimator
               </p>
               <h2 className="mt-3 max-w-3xl text-3xl font-semibold tracking-tight text-[var(--text-heading)] md:text-4xl">
-                Explore estimated impact before creating a workspace.
+                Explore estimated impact before creating an India carbon
+                marketplace workspace.
               </h2>
             </div>
             <div className="flex flex-col gap-3 lg:items-end">
@@ -864,7 +866,7 @@ export function HomeLandingExperience({
                 href="/estimator"
                 className="w-fit rounded-full border border-[var(--border-strong)] bg-[var(--surface)] px-5 py-3 text-sm font-semibold text-[var(--brand)]"
               >
-                Open full estimator
+                Open carbon credit estimator
               </Link>
             </div>
           </div>
@@ -885,7 +887,8 @@ export function HomeLandingExperience({
                 How it works
               </p>
               <h2 className="mt-3 text-4xl font-semibold tracking-tight text-[var(--text-heading)]">
-                One operating layer for sellers, buyers, and facilitators.
+                One carbon marketplace layer for India sellers, buyers, and
+                facilitators.
               </h2>
             </div>
             <div className="grid gap-4 lg:grid-cols-3">

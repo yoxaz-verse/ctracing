@@ -1,7 +1,15 @@
 import { HomeLandingExperience } from "@/app/_components/HomeLandingExperience";
 import { createClient } from "@/lib/supabase/server";
+import { absoluteUrl, jsonLd, pageMetadata, siteName } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = pageMetadata({
+  title: "Carbon Credit Marketplace India for Buyers and Sellers",
+  description:
+    "TeraTrace helps Indian carbon credit buyers, project sellers, and facilitators review live supply, verification context, pricing signals, and marketplace interest.",
+  path: "/",
+});
 
 export type HomepageProject = {
   project_name: string;
@@ -96,6 +104,53 @@ async function getHomepageSummary() {
 
 export default async function Home() {
   const { summary, unavailable } = await getHomepageSummary();
+  const structuredData = [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: siteName,
+      url: absoluteUrl("/"),
+      description: metadata.description,
+      inLanguage: "en-IN",
+      potentialAction: {
+        "@type": "SearchAction",
+        target: `${absoluteUrl("/")}?q={search_term_string}`,
+        "query-input": "required name=search_term_string",
+      },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: siteName,
+      url: absoluteUrl("/"),
+      logo: absoluteUrl("/favicon.svg"),
+      description:
+        "TeraTrace provides a carbon credit marketplace layer for buyers, project sellers, and facilitators in India.",
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: siteName,
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web",
+      url: absoluteUrl("/"),
+      description:
+        "India-first carbon credit marketplace software for reviewing project supply, buyer interest, facilitator matches, and verification status.",
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "USD",
+      },
+    },
+  ];
 
-  return <HomeLandingExperience summary={summary} unavailable={unavailable} />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLd(structuredData) }}
+      />
+      <HomeLandingExperience summary={summary} unavailable={unavailable} />
+    </>
+  );
 }

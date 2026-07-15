@@ -2,8 +2,16 @@ import Link from "next/link";
 import { PendingButton } from "@/app/_components/PendingButton";
 import { ThemeToggle } from "@/app/_components/ThemeToggle";
 import { requestPasswordReset } from "@/app/auth/actions";
+import { pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = pageMetadata({
+  title: "Reset TeraTrace Password",
+  description:
+    "Request a password reset link for a TeraTrace carbon credit marketplace workspace.",
+  path: "/forgot-password",
+});
 
 export default async function ForgotPasswordPage({
   searchParams,

@@ -7,8 +7,16 @@ import { createClient } from "@/lib/supabase/server";
 import { getVerificationResendAvailability } from "@/lib/email-verification-resend";
 import { ThemeToggle } from "@/app/_components/ThemeToggle";
 import type { Profile, UserRole } from "@/lib/types";
+import { pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = pageMetadata({
+  title: "Check Email for TeraTrace Verification",
+  description:
+    "Check your company inbox or resend a verification link for a TeraTrace carbon credit marketplace account.",
+  path: "/verify-email/pending",
+});
 
 const profileSelect =
   "id,email,role,company_name,contact_name,website,country,company_location,incorporated_on,gstin,gst_details,registration_type,registration_number,annual_credit_demand,preferred_project_types,carbon_purchase_goal,annual_credit_supply,project_methodologies,registry_experience,company_verification_status,company_verified_at,company_verified_by,company_verification_note,email_verified_at,onboarding_completed_at";

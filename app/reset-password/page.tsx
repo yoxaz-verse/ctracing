@@ -3,8 +3,16 @@ import { PasswordField } from "@/app/_components/PasswordField";
 import { PendingButton } from "@/app/_components/PendingButton";
 import { ThemeToggle } from "@/app/_components/ThemeToggle";
 import { resetPassword } from "@/app/auth/actions";
+import { pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = pageMetadata({
+  title: "Choose a New TeraTrace Password",
+  description:
+    "Choose a new password for a TeraTrace carbon credit marketplace workspace.",
+  path: "/reset-password",
+});
 
 export default async function ResetPasswordPage({
   searchParams,

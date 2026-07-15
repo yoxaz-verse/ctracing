@@ -22,6 +22,10 @@ npm run dev
 Add your Supabase project URL, publishable key, app URL, and SMTP credentials
 to `.env.local`. A Supabase service-role key is not required.
 
+For production SEO, set `NEXT_PUBLIC_SITE_URL` to the canonical public domain,
+for example `https://your-domain.com`. `SITE_URL` is also supported as a
+fallback for sitemap, robots, canonical, Open Graph, and structured-data URLs.
+
 Apply `supabase/schema.sql` in the Supabase SQL editor before testing live
 signup and dashboard data. The dashboards include sample data when no project
 records exist yet.
