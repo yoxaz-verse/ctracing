@@ -684,13 +684,13 @@ export function HomeLandingExperience({
             <ThemeToggle variant="icon" />
             <Link
               href="/login"
-              className="landing-action whitespace-nowrap rounded-full border border-[var(--border-strong)] px-3 py-1.5 text-xs font-medium text-[var(--text)] transition hover:border-[var(--brand)] sm:px-3.5 sm:text-sm"
+              className="landing-action whitespace-nowrap rounded-full border border-[var(--border-strong)] px-2.5 py-1.5 text-xs font-medium text-[var(--text)] transition hover:border-[var(--brand)] sm:px-3 sm:text-sm"
             >
               Log in
             </Link>
             <Link
               href="/signup"
-              className="landing-action whitespace-nowrap rounded-full bg-[var(--brand)] px-3.5 py-1.5 text-xs font-semibold text-[var(--surface)] transition hover:bg-[var(--brand-hover)] sm:px-4 sm:text-sm"
+              className="landing-action whitespace-nowrap rounded-full bg-[var(--brand)] px-3 py-1.5 text-xs font-semibold text-[var(--surface)] transition hover:bg-[var(--brand-hover)] sm:px-3.5 sm:text-sm"
             >
               Create account
             </Link>
