@@ -39,6 +39,12 @@ export const publicRoutes = [
     priority: 0.85,
   },
   {
+    path: "/blog",
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.8,
+  },
+  {
     path: "/signup",
     lastModified: new Date(),
     changeFrequency: "monthly" as const,

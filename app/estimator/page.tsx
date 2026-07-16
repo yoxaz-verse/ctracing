@@ -43,6 +43,12 @@ export default function PublicEstimatorPage() {
             <div className="flex min-w-0 shrink-0 items-center gap-2">
               <ThemeToggle variant="icon" />
               <Link
+                href="/blog"
+                className="whitespace-nowrap rounded-full border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--text)] transition hover:border-[var(--brand)] sm:px-3.5 sm:text-sm"
+              >
+                Blog
+              </Link>
+              <Link
                 href="/login"
                 className="whitespace-nowrap rounded-full border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--text)] transition hover:border-[var(--brand)] sm:px-3.5 sm:text-sm"
               >

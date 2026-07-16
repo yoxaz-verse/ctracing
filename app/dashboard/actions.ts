@@ -90,6 +90,31 @@ function cleanCompanyVerificationStatus(value: string) {
     : "pending";
 }
 
+function cleanBlogPostStatus(value: string) {
+  return ["draft", "published", "archived"].includes(value) ? value : "draft";
+}
+
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 72)
+    .replace(/-+$/g, "");
+}
+
+function parseTags(value: string) {
+  return Array.from(
+    new Set(
+      value
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean)
+        .slice(0, 12),
+    ),
+  );
+}
+
 function getOptionalNumber(formData: FormData, key: string) {
   const value = getString(formData, key);
   if (!value) {
@@ -172,6 +197,238 @@ async function notifyUser(
     body,
     href,
   });
+}
+
+async function ensureUniqueBlogSlug(
+  supabase: Awaited<ReturnType<typeof getSessionProfile>>["supabase"],
+  requestedSlug: string,
+  existingPostId?: string,
+) {
+  const baseSlug = slugify(requestedSlug) || "blog-post";
+
+  for (let index = 0; index < 100; index += 1) {
+    const candidate = index === 0 ? baseSlug : `${baseSlug}-${index + 1}`;
+    let query = supabase
+      .from("blog_posts")
+      .select("id")
+      .eq("slug", candidate)
+      .limit(1);
+
+    if (existingPostId) {
+      query = query.neq("id", existingPostId);
+    }
+
+    const { data, error } = await query.maybeSingle<{ id: string }>();
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    if (!data) {
+      return candidate;
+    }
+  }
+
+  throw new Error("Could not create a unique blog slug.");
+}
+
+function revalidateBlogPaths(slug?: string | null) {
+  revalidatePath("/blog");
+  revalidatePath("/dashboard/admin/blog");
+  if (slug) {
+    revalidatePath(`/blog/${slug}`);
+  }
+}
+
+export async function createBlogPost(formData: FormData) {
+  const { supabase, profile } = await getSessionProfile();
+
+  if (profile.role !== "admin") {
+    redirectForRole(profile.role);
+  }
+
+  const redirectTo = getRedirectPath(formData, "/dashboard/admin/blog");
+  const title = getRequiredString(formData, "title");
+  const slug = await ensureUniqueBlogSlug(
+    supabase,
+    getString(formData, "slug") || title,
+  );
+  const status = cleanBlogPostStatus(getString(formData, "status"));
+  const publishedAt = status === "published" ? new Date().toISOString() : null;
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .insert({
+      author_id: profile.id,
+      title,
+      slug,
+      excerpt: getRequiredString(formData, "excerpt"),
+      body: getRequiredString(formData, "body"),
+      cover_image_url: getOptionalString(formData, "coverImageUrl"),
+      tags: parseTags(getString(formData, "tags")),
+      status,
+      published_at: publishedAt,
+    })
+    .select("id,slug")
+    .single<{ id: string; slug: string }>();
+
+  if (error) {
+    redirect(`${redirectTo}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  await recordAudit(supabase, "blog_post.created", "blog_post", data?.id ?? null, {
+    title,
+    status,
+  });
+  revalidateBlogPaths(data?.slug);
+  redirect(`/dashboard/admin/blog/${data?.id}?created=1`);
+}
+
+export async function updateBlogPost(formData: FormData) {
+  const { supabase, profile } = await getSessionProfile();
+
+  if (profile.role !== "admin") {
+    redirectForRole(profile.role);
+  }
+
+  const postId = getRequiredString(formData, "postId");
+  const redirectTo = getRedirectPath(formData, `/dashboard/admin/blog/${postId}`);
+  const { data: currentPost, error: readError } = await supabase
+    .from("blog_posts")
+    .select("id,slug,status,published_at")
+    .eq("id", postId)
+    .maybeSingle<{ id: string; slug: string; status: string; published_at: string | null }>();
+
+  if (readError) {
+    redirect(`${redirectTo}?error=${encodeURIComponent(readError.message)}`);
+  }
+
+  if (!currentPost) {
+    redirect(`${redirectTo}?error=${encodeURIComponent("Blog post not found.")}`);
+  }
+
+  const title = getRequiredString(formData, "title");
+  const status = cleanBlogPostStatus(getString(formData, "status"));
+  const slug = await ensureUniqueBlogSlug(
+    supabase,
+    getString(formData, "slug") || title,
+    postId,
+  );
+  const publishedAt =
+    status === "published"
+      ? currentPost.published_at ?? new Date().toISOString()
+      : null;
+  const { error } = await supabase
+    .from("blog_posts")
+    .update({
+      title,
+      slug,
+      excerpt: getRequiredString(formData, "excerpt"),
+      body: getRequiredString(formData, "body"),
+      cover_image_url: getOptionalString(formData, "coverImageUrl"),
+      tags: parseTags(getString(formData, "tags")),
+      status,
+      published_at: publishedAt,
+    })
+    .eq("id", postId);
+
+  if (error) {
+    redirect(`${redirectTo}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  await recordAudit(supabase, "blog_post.updated", "blog_post", postId, {
+    title,
+    status,
+  });
+  revalidateBlogPaths(currentPost.slug);
+  revalidateBlogPaths(slug);
+  redirect(`${redirectTo}?saved=1`);
+}
+
+export async function publishBlogPost(formData: FormData) {
+  const { supabase, profile } = await getSessionProfile();
+
+  if (profile.role !== "admin") {
+    redirectForRole(profile.role);
+  }
+
+  const postId = getRequiredString(formData, "postId");
+  const redirectTo = getRedirectPath(formData, "/dashboard/admin/blog");
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .update({
+      status: "published",
+      published_at: new Date().toISOString(),
+    })
+    .eq("id", postId)
+    .select("slug")
+    .single<{ slug: string }>();
+
+  if (error) {
+    redirect(`${redirectTo}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  await recordAudit(supabase, "blog_post.published", "blog_post", postId);
+  revalidateBlogPaths(data?.slug);
+  redirect(`${redirectTo}?published=1`);
+}
+
+export async function unpublishBlogPost(formData: FormData) {
+  const { supabase, profile } = await getSessionProfile();
+
+  if (profile.role !== "admin") {
+    redirectForRole(profile.role);
+  }
+
+  const postId = getRequiredString(formData, "postId");
+  const redirectTo = getRedirectPath(formData, "/dashboard/admin/blog");
+  const { data, error } = await supabase
+    .from("blog_posts")
+    .update({
+      status: "draft",
+      published_at: null,
+    })
+    .eq("id", postId)
+    .select("slug")
+    .single<{ slug: string }>();
+
+  if (error) {
+    redirect(`${redirectTo}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  await recordAudit(supabase, "blog_post.unpublished", "blog_post", postId);
+  revalidateBlogPaths(data?.slug);
+  redirect(`${redirectTo}?unpublished=1`);
+}
+
+export async function deleteBlogPost(formData: FormData) {
+  const { supabase, profile } = await getSessionProfile();
+
+  if (profile.role !== "admin") {
+    redirectForRole(profile.role);
+  }
+
+  const postId = getRequiredString(formData, "postId");
+  const redirectTo = getRedirectPath(formData, "/dashboard/admin/blog");
+  const { data: currentPost, error: readError } = await supabase
+    .from("blog_posts")
+    .select("slug,title")
+    .eq("id", postId)
+    .maybeSingle<{ slug: string; title: string }>();
+
+  if (readError) {
+    redirect(`${redirectTo}?error=${encodeURIComponent(readError.message)}`);
+  }
+
+  const { error } = await supabase.from("blog_posts").delete().eq("id", postId);
+
+  if (error) {
+    redirect(`${redirectTo}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  await recordAudit(supabase, "blog_post.deleted", "blog_post", postId, {
+    title: currentPost?.title,
+  });
+  revalidateBlogPaths(currentPost?.slug);
+  redirect(`${redirectTo}?deleted=1`);
 }
 
 export async function createProject(formData: FormData) {

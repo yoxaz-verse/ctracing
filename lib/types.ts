@@ -29,6 +29,7 @@ export type FacilitatorAssignmentScope =
   | "interest"
   | "opportunity";
 export type FacilitatorParticipantType = "buyer" | "seller";
+export type BlogPostStatus = "draft" | "published" | "archived";
 
 export type Profile = {
   id: string;
@@ -247,4 +248,19 @@ export type AuditLog = {
   entity_id: string | null;
   metadata: Record<string, unknown>;
   created_at?: string;
+};
+
+export type BlogPost = {
+  id: string;
+  author_id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  body: string;
+  cover_image_url: string | null;
+  tags: string[];
+  status: BlogPostStatus;
+  published_at: string | null;
+  created_at?: string;
+  updated_at?: string;
 };

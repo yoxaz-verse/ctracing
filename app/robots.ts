@@ -8,6 +8,7 @@ export default function robots(): MetadataRoute.Robots {
       allow: [
         "/",
         "/estimator",
+        "/blog",
         "/signup",
         "/login",
         "/forgot-password",

@@ -683,6 +683,12 @@ export function HomeLandingExperience({
           <div className="landing-actions flex shrink-0 items-center gap-2">
             <ThemeToggle variant="icon" />
             <Link
+              href="/blog"
+              className="landing-action whitespace-nowrap rounded-full border border-[var(--border-strong)] px-2.5 py-1.5 text-xs font-medium text-[var(--text)] transition hover:border-[var(--brand)] sm:px-3 sm:text-sm"
+            >
+              Blog
+            </Link>
+            <Link
               href="/login"
               className="landing-action whitespace-nowrap rounded-full border border-[var(--border-strong)] px-2.5 py-1.5 text-xs font-medium text-[var(--text)] transition hover:border-[var(--brand)] sm:px-3 sm:text-sm"
             >

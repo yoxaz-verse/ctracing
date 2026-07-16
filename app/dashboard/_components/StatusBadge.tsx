@@ -1,5 +1,6 @@
 const statusStyles: Record<string, string> = {
   draft: "bg-[#f3f6f0] text-[#314239]",
+  published: "bg-[#eef6ed] text-[#214d35]",
   submitted: "bg-[#eef6ed] text-[#214d35]",
   needs_review: "bg-[#fff1ed] text-[#8a2c16]",
   listed: "bg-[#eef6ed] text-[#214d35]",

@@ -57,6 +57,7 @@ export function DashboardShell({
             { label: "Estimator", href: "/dashboard/estimator" },
             { label: "Factors", href: "/dashboard/admin/factors" },
             { label: "Reviews", href: "/dashboard/admin/reviews" },
+            { label: "Blog", href: "/dashboard/admin/blog" },
             { label: "Users", href: "/dashboard/admin/users" },
             { label: "Audit", href: "/dashboard/admin/audit" },
           ];
